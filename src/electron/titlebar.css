@@ -1,0 +1,38 @@
+body {
+  font-family: Arial;
+  margin: 0;
+}
+
+.titlebar {
+  height: 40px;
+  background: #1e1e1e;
+  display: flex;
+  align-items: center;
+  padding-left: 12px;
+  -webkit-app-region: drag;
+  cursor: pointer;
+}
+
+.mac-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.btn {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  -webkit-app-region: no-drag; /* clickable */
+}
+
+.close {
+  background: #ff5f57;
+}
+
+.minimize {
+  background: #ffbd2e;
+}
+
+.maximize {
+  background: #28c840;
+}
