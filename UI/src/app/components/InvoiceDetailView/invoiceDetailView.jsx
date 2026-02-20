@@ -1,0 +1,212 @@
+import React from 'react';
+import { Printer, Download, X } from 'lucide-react';
+// Updated image path to go up one more level
+import brickImage from '../../../assets/799b5e090af0c56945bf82c5795a9cd1c7470511.png';
+import './invoiceDetailView.css';
+
+export function InvoiceDetailView({ invoice, onClose }) {
+    const handlePrint = () => {
+        const printContent = document.getElementById('invoice-print-area');
+        if (!printContent) return;
+
+        const printWindow = window.open('', '', 'width=800,height=600');
+        if (!printWindow) return;
+
+        printWindow.document.write(`
+      <html>
+        <head>
+          <title>Invoice ${invoice.pavatiNo}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; margin: 0; }
+            * { box-sizing: border-box; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 2px solid #000; padding: 8px; text-align: left; }
+            th { background-color: #f9f9f9; font-weight: 600; }
+            .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 15px; }
+            .company-name { font-size: 28px; font-weight: bold; margin: 10px 0; }
+            .contact-info { display: flex; justify-content: space-between; margin: 10px 0; font-size: 14px; }
+            .customer-section { margin: 20px 0; }
+            .customer-info { font-size: 14px; line-height: 1.6; }
+            .invoice-title { text-align: center; font-size: 24px; font-weight: bold; text-decoration: underline; margin: 20px 0; }
+            .summary-box { border: 2px solid #000; padding: 10px; margin-top: 20px; }
+            .summary-row { display: flex; justify-content: space-between; padding: 5px 0; }
+            .totals-table { width: auto; margin-left: auto; margin-top: 20px; }
+            .signature-section { margin-top: 40px; }
+            @media print {
+              body { margin: 0; padding: 15px; }
+              button { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          ${printContent.innerHTML}
+        </body>
+      </html>
+    `);
+
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+        }, 250);
+    };
+
+    const handleDownloadPDF = () => {
+        alert('PDF download functionality would be implemented here using a library like jsPDF or react-pdf');
+    };
+
+    return (
+        <div className="invoice-detail-container">
+            <div className="invoice-detail-card">
+                <div className="invoice-detail-header">
+                    <h3 className="header-title">Invoice Details</h3>
+                    <div className="header-actions">
+                        <button
+                            onClick={handleDownloadPDF}
+                            className="action-btn btn-pdf"
+                        >
+                            <Download size={18} />
+                            PDF
+                        </button>
+                        <button
+                            onClick={handlePrint}
+                            className="action-btn btn-print"
+                        >
+                            <Printer size={18} />
+                            Print
+                        </button>
+                        <button
+                            onClick={onClose}
+                            className="action-btn btn-close"
+                        >
+                            <X size={18} />
+                        </button>
+                    </div>
+                </div>
+
+                <div id="invoice-print-area" className="invoice-print-area">
+                    {/* Header Section */}
+                    <div className="print-header-section">
+                        <div className="company-branding">
+                            <div className="branding-left">
+                                <svg width="80" height="60" viewBox="0 0 80 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="8" y="8" width="64" height="12" fill="#dc2626" stroke="#991b1b" strokeWidth="1" />
+                                    <rect x="8" y="24" width="64" height="12" fill="#dc2626" stroke="#991b1b" strokeWidth="1" />
+                                    <rect x="8" y="40" width="64" height="12" fill="#dc2626" stroke="#991b1b" strokeWidth="1" />
+                                    <text x="16" y="16" fontSize="8" fill="#fff" fontFamily="Arial, sans-serif">JC</text>
+                                    <text x="16" y="32" fontSize="8" fill="#fff" fontFamily="Arial, sans-serif">Bricks</text>
+                                </svg>
+                                <div>
+                                    <h1 className="company-name">JC Bricks Manufacturing</h1>
+                                    <p className="company-address">Village Bisnawda Dhar Road Indore-453001 (M.P.) India</p>
+                                </div>
+                            </div>
+                            <img src={brickImage} alt="Brick" className="brick-logo" />
+                        </div>
+
+                        <div className="contact-info-grid">
+                            <div>
+                                <p><strong>Contact No.:</strong> 9826305085, 9926777485</p>
+                                <p><strong>WhatsApp No.:</strong> 9977175856</p>
+                            </div>
+                            <div className="contact-right">
+                                <p><strong>Email ID:</strong> jcbricksmanufacturing@gmail.com</p>
+                                <p style={{ marginTop: '0.5rem' }}>
+                                    <strong>Date:</strong> {new Date(invoice.date).toLocaleDateString('en-GB', {
+                                        day: '2-digit',
+                                        month: 'short',
+                                        year: '2-digit'
+                                    })}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Customer Invoice Title */}
+                    <h2 className="customer-invoice-title">Customer Invoice</h2>
+
+                    {/* Customer Details */}
+                    <div className="customer-details-grid">
+                        <div>
+                            <p><strong>Name:</strong> {invoice.customerName}</p>
+                            <p><strong>Address:</strong> {invoice.site}</p>
+                            <p><strong>Contact No.:</strong> {invoice.vehicleNo}</p>
+                        </div>
+                        <div>
+                            <p><strong>Email ID:</strong></p>
+                        </div>
+                    </div>
+
+                    {/* Invoice Table */}
+                    <table className="invoice-detail-table">
+                        <thead>
+                            <tr>
+                                <th>S. N.</th>
+                                <th>Date</th>
+                                <th>Product Detail</th>
+                                <th>Quantity</th>
+                                <th>Pavti No.</th>
+                                <th>Rate</th>
+                                <th>Total Amount</th>
+                                <th>Advance Amount</th>
+                                <th>Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>{invoice.sNo}</td>
+                                <td className="whitespace-nowrap">
+                                    {new Date(invoice.date).toLocaleDateString('en-GB', {
+                                        day: '2-digit',
+                                        month: 'short',
+                                        year: '2-digit'
+                                    })}
+                                </td>
+                                <td>{invoice.product}</td>
+                                <td>{invoice.quantity}</td>
+                                <td>{invoice.pavatiNo}</td>
+                                <td>{invoice.rate}</td>
+                                <td>₹ {invoice.amount.toLocaleString()}</td>
+                                <td>₹ {invoice.advance.toLocaleString()}</td>
+                                <td>₹ {invoice.balance.toLocaleString()}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    {/* Totals Section */}
+                    <div className="totals-section">
+                        <div className="totals-left">
+                            <p style={{ marginBottom: '0.5rem' }}><strong>Total Bricks = {invoice.quantity}</strong></p>
+                            <div className="signature-box">
+                                <p>Authorized Signatory</p>
+                                <p>JC Bricks Manufacturing</p>
+                            </div>
+                        </div>
+
+                        <div className="totals-right">
+                            <div className="total-row">
+                                <div className="total-label"><strong>Total Amount =</strong></div>
+                                <div className="total-value"><strong>₹ {invoice.amount.toLocaleString()}</strong></div>
+                            </div>
+                            <div className="total-row">
+                                <div className="total-label"><strong>Deposit =</strong></div>
+                                <div className="total-value"><strong>₹ {invoice.advance.toLocaleString()}</strong></div>
+                            </div>
+                            <div className="total-row">
+                                <div className="total-label"><strong>Total Balance =</strong></div>
+                                <div className="total-value"><strong>₹ {invoice.balance.toLocaleString()}</strong></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {invoice.remarks && (
+                        <div className="remarks-box">
+                            <p><strong>Remarks:</strong> {invoice.remarks}</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}

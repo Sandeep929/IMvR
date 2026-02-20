@@ -1,0 +1,297 @@
+/* invoiceDetailView.css */
+
+.invoice-detail-container {
+    padding: 2rem;
+    /* p-8 */
+}
+
+.invoice-detail-card {
+    background-color: #ffffff;
+    border-radius: 0.5rem;
+    /* rounded-lg */
+    border: 1px solid #e2e8f0;
+    /* border-slate-200 */
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    /* shadow-sm */
+    max-width: 56rem;
+    /* max-w-4xl */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.invoice-detail-header {
+    padding: 1.5rem;
+    /* p-6 */
+    border-bottom: 1px solid #e2e8f0;
+    /* border-slate-200 */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+@media print {
+    .invoice-detail-header {
+        display: none;
+    }
+}
+
+.header-title {
+    font-size: 1.25rem;
+    /* text-xl */
+    margin: 0;
+    color: #0f172a;
+    /* text-slate-900 (inferred) */
+}
+
+.header-actions {
+    display: flex;
+    gap: 0.5rem;
+    /* gap-2 */
+}
+
+.action-btn {
+    padding: 0.5rem 1rem;
+    /* px-4 py-2 */
+    border-radius: 0.5rem;
+    /* rounded-lg */
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    /* gap-2 */
+    transition: background-color 0.2s;
+    font-size: 0.875rem;
+    /* similar to existing buttons */
+    color: #ffffff;
+}
+
+.btn-pdf {
+    background-color: #16a34a;
+    /* bg-green-600 */
+}
+
+.btn-pdf:hover {
+    background-color: #15803d;
+    /* hover:bg-green-700 */
+}
+
+.btn-print {
+    background-color: #2563eb;
+    /* bg-blue-600 */
+}
+
+.btn-print:hover {
+    background-color: #1d4ed8;
+    /* hover:bg-blue-700 */
+}
+
+.btn-close {
+    background-color: #e2e8f0;
+    /* bg-slate-200 */
+    color: #334155;
+    /* text-slate-700 */
+}
+
+.btn-close:hover {
+    background-color: #cbd5e1;
+    /* hover:bg-slate-300 */
+}
+
+.invoice-print-area {
+    padding: 2rem;
+    /* p-8 */
+}
+
+/* Print Header Section */
+.print-header-section {
+    border-bottom: 2px solid #000000;
+    padding-bottom: 1rem;
+    /* pb-4 */
+    margin-bottom: 1.5rem;
+    /* mb-6 */
+}
+
+.company-branding {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    /* mb-4 */
+}
+
+.branding-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    /* gap-4 */
+}
+
+.company-name {
+    font-size: 1.875rem;
+    /* text-3xl */
+    margin-bottom: 0.25rem;
+    /* mb-1 */
+    margin-top: 0;
+    font-weight: 700;
+}
+
+.company-address {
+    font-size: 0.875rem;
+    /* text-sm */
+    margin: 0;
+}
+
+.brick-logo {
+    width: 6rem;
+    /* w-24 */
+    height: auto;
+}
+
+.contact-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    /* gap-4 */
+    font-size: 0.875rem;
+    /* text-sm */
+    margin-top: 0.75rem;
+    /* mt-3 */
+}
+
+.contact-right {
+    text-align: right;
+}
+
+.contact-info-grid p {
+    margin: 0;
+    line-height: 1.5;
+}
+
+.customer-invoice-title {
+    font-size: 1.5rem;
+    /* text-2xl */
+    text-align: center;
+    margin-bottom: 1.5rem;
+    /* mb-6 */
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    /* decoration-2 */
+    margin-top: 0;
+    font-weight: 700;
+}
+
+.customer-details-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem;
+    /* gap-8 */
+    margin-bottom: 1.5rem;
+    /* mb-6 */
+}
+
+.customer-details-grid p {
+    margin-bottom: 0.25rem;
+    /* mb-1 */
+    margin-top: 0;
+}
+
+/* Invoice Table */
+.invoice-detail-table {
+    width: 100%;
+    margin-bottom: 1.5rem;
+    /* mb-6 */
+    border: 2px solid #000000;
+    border-collapse: collapse;
+}
+
+.invoice-detail-table thead tr {
+    background-color: #f8fafc;
+    /* bg-slate-50 */
+}
+
+.invoice-detail-table th,
+.invoice-detail-table td {
+    padding: 0.75rem;
+    /* p-3 */
+    border: 2px solid #000000;
+    text-align: center;
+}
+
+.invoice-detail-table td.whitespace-nowrap {
+    white-space: nowrap;
+}
+
+/* Totals Section */
+.totals-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: 2rem;
+    /* mt-8 */
+}
+
+.totals-left p,
+.totals-right p {
+    margin: 0;
+}
+
+.totals-left {
+    /* defaults */
+}
+
+.signature-box {
+    margin-top: 2rem;
+    /* mt-8 */
+}
+
+.signature-box p {
+    margin-bottom: 0.25rem;
+    /* mb-1 */
+}
+
+.totals-right {
+    border: 2px solid #000000;
+}
+
+.total-row {
+    display: flex;
+    border-bottom: 2px solid #000000;
+}
+
+.total-row:last-child {
+    border-bottom: none;
+}
+
+.total-label {
+    padding: 0.75rem;
+    /* p-3 */
+    padding-right: 2rem;
+    /* pr-8 */
+    border-right: 2px solid #000000;
+    min-width: 180px;
+}
+
+.total-value {
+    padding: 0.75rem;
+    /* p-3 */
+    min-width: 140px;
+    text-align: right;
+}
+
+.remarks-box {
+    margin-top: 1.5rem;
+    /* mt-6 */
+    padding: 1rem;
+    /* p-4 */
+    border: 2px solid #cbd5e1;
+    /* border-slate-300 */
+    border-radius: 0.25rem;
+    /* rounded */
+}
+
+.remarks-box p {
+    font-size: 0.875rem;
+    /* text-sm */
+    margin: 0;
+}

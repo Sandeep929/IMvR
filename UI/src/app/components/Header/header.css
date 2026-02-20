@@ -1,0 +1,195 @@
+/* header.css */
+
+.header-container {
+    background-color: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    /* border-slate-200 */
+}
+
+.header-content {
+    padding: 1rem 2rem;
+    /* px-8 py-4 */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header-title-section {
+    /* container for title and date */
+}
+
+.header-title {
+    font-size: 1.25rem;
+    /* text-xl */
+    color: #0f172a;
+    /* text-slate-900 */
+    margin: 0;
+}
+
+.header-date {
+    font-size: 0.75rem;
+    /* text-xs */
+    color: #64748b;
+    /* text-slate-500 */
+    margin-top: 0.125rem;
+    /* mt-0.5 */
+    margin-bottom: 0;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    /* gap-3 */
+}
+
+.search-wrapper {
+    position: relative;
+}
+
+.search-icon {
+    position: absolute;
+    left: 0.75rem;
+    /* left-3 */
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    /* text-slate-400 */
+}
+
+.search-input {
+    padding-left: 2.5rem;
+    /* pl-10 */
+    padding-right: 1rem;
+    /* pr-4 */
+    padding-top: 0.5rem;
+    /* py-2 */
+    padding-bottom: 0.5rem;
+    border: 1px solid #cbd5e1;
+    /* border-slate-300 */
+    background-color: #ffffff;
+    font-size: 0.875rem;
+    /* text-sm */
+    width: 16rem;
+    /* w-64 */
+    border-radius: 0.25rem;
+}
+
+.search-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 1px #0f172a;
+    /* ring-1 ring-slate-900 */
+    border-color: #0f172a;
+}
+
+.notification-btn {
+    padding: 0.5rem;
+    /* p-2 */
+    position: relative;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    border-radius: 9999px;
+    /* rounded usually for these buttons, though not explicit in tailwind p-2 usually implies square or round depending on context, assuming standard icon button */
+}
+
+.notification-btn:hover {
+    background-color: #f1f5f9;
+    /* hover:bg-slate-100 */
+}
+
+.notification-icon {
+    color: #475569;
+    /* text-slate-600 */
+}
+
+.notification-badge {
+    position: absolute;
+    top: 0.375rem;
+    /* top-1.5 */
+    right: 0.375rem;
+    /* right-1.5 */
+    width: 0.5rem;
+    /* w-2 */
+    height: 0.5rem;
+    /* h-2 */
+    background-color: #dc2626;
+    /* bg-red-600 */
+    border-radius: 9999px;
+    /* rounded-full */
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    /* gap-3 */
+    padding-left: 0.75rem;
+    /* px-3 */
+    padding-right: 0.75rem;
+    padding-top: 0.5rem;
+    /* py-2 */
+    padding-bottom: 0.5rem;
+    border-left: 1px solid #e2e8f0;
+    /* border-l border-slate-200 */
+    margin-left: 0.5rem;
+    /* ml-2 */
+}
+
+.user-avatar {
+    width: 2.25rem;
+    /* w-9 */
+    height: 2.25rem;
+    /* h-9 */
+    background-color: #0f172a;
+    /* bg-slate-900 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.user-icon {
+    color: #ffffff;
+}
+
+.user-info {
+    font-size: 0.875rem;
+    /* text-sm */
+}
+
+.user-name {
+    text-transform: capitalize;
+    color: #0f172a;
+    /* text-slate-900 */
+    line-height: 1.25;
+    margin: 0;
+}
+
+.user-role {
+    font-size: 0.75rem;
+    /* text-xs */
+    color: #64748b;
+    /* text-slate-500 */
+    margin: 0;
+}
+
+.logout-btn {
+    padding: 0.5rem;
+    /* p-2 */
+    color: #475569;
+    /* text-slate-600 */
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s, background-color 0.2s;
+    border-radius: 9999px;
+}
+
+.logout-btn:hover {
+    background-color: #fef2f2;
+    /* hover:bg-red-50 */
+    color: #dc2626;
+    /* hover:text-red-600 */
+}

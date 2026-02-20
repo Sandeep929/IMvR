@@ -1,0 +1,140 @@
+/* sidebar.css */
+
+.sidebar-container {
+    width: 16rem;
+    /* w-64 */
+    background-color: #0f172a;
+    /* bg-slate-900 */
+    border-right: 1px solid #1e293b;
+    /* border-slate-800 */
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.sidebar-header {
+    padding: 1.5rem;
+    /* p-6 */
+    border-bottom: 1px solid #1e293b;
+    /* border-slate-800 */
+}
+
+.sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    /* gap-3 */
+}
+
+.logo-icon-box {
+    width: 2.5rem;
+    /* w-10 */
+    height: 2.5rem;
+    /* h-10 */
+    background-color: #dc2626;
+    /* bg-red-600 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.logo-text {
+    color: #ffffff;
+}
+
+.logo-title {
+    font-size: 0.875rem;
+    /* text-sm */
+    line-height: 1.25;
+    margin: 0;
+}
+
+.logo-subtitle {
+    font-size: 0.75rem;
+    /* text-xs */
+    color: #94a3b8;
+    /* text-slate-400 */
+    margin: 0;
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: 1rem;
+    /* p-4 */
+}
+
+.sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    /* space-y-1 equivalent */
+}
+
+.nav-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    /* gap-3 */
+    padding: 0.75rem 1rem;
+    /* px-4 py-3 */
+    font-size: 0.875rem;
+    /* text-sm */
+    transition: background-color 0.2s, color 0.2s;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+}
+
+.nav-item-active {
+    background-color: #1e293b;
+    /* bg-slate-800 */
+    color: #ffffff;
+    /* text-white */
+    border-left: 2px solid #dc2626;
+    /* border-l-2 border-red-600 */
+}
+
+.nav-item-inactive {
+    color: #94a3b8;
+    /* text-slate-400 */
+    border-left: 2px solid transparent;
+    /* maintain layout */
+}
+
+.nav-item-inactive:hover {
+    color: #ffffff;
+    /* hover:text-white */
+    background-color: rgba(30, 41, 59, 0.5);
+    /* hover:bg-slate-800/50 */
+}
+
+.nav-icon {
+    flex-shrink: 0;
+}
+
+.sidebar-footer {
+    padding: 1.5rem;
+    /* p-6 */
+    border-top: 1px solid #1e293b;
+    /* border-slate-800 */
+}
+
+.footer-content {
+    font-size: 0.75rem;
+    /* text-xs */
+    color: #64748b;
+    /* text-slate-500 */
+}
+
+.footer-text {
+    margin: 0;
+    margin-bottom: 0.25rem;
+    /* space-y-1 */
+}
+
+.footer-text:last-child {
+    margin-bottom: 0;
+}

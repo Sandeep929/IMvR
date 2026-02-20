@@ -1,0 +1,85 @@
+# =========================
+# Node / Package Managers
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# Build Outputs
+# =========================
+dist/
+dist-electron/
+out/
+release/
+build/
+
+# Electron build artifacts
+*.exe
+*.msi
+*.dmg
+*.AppImage
+
+# =========================
+# Vite / Cache
+# =========================
+.vite/
+.vscode/*
+!.vscode/extensions.json
+
+# =========================
+# TypeScript
+# =========================
+*.tsbuildinfo
+
+# =========================
+# OS / Editor junk
+# =========================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# =========================
+# Environment files
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+
+# =========================
+# Electron runtime cache
+# =========================
+electron/.cache/
+electron/.vite/
+
+# =========================
+# Large binary assets (prevent size issues)
+# =========================
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+
+# =========================
+# Optional: Ignore generated assets
+# (keep src/assets if you want images tracked)
+# =========================
+# Uncomment ONLY if assets are auto-generated
+# src/assets/
+
+# =========================
+# IDE
+# =========================
+.idea/
+*.swp
+*.swo
