@@ -3,6 +3,22 @@ import { X } from 'lucide-react';
 import './invoiceForm.css';
 
 export function InvoiceForm({ invoice, onSave, onCancel }) {
+    const [customers, setCustomers] = useState([]);
+
+    useEffect(() => {
+        const fetchCustomers = async () => {
+            try {
+                const res = await fetch('http://localhost:5000/api/customers');
+                const data = await res.json();
+                setCustomers(data);
+            } catch (err) {
+                console.error("Failed to load customers", err);
+            }
+        };
+
+        fetchCustomers();
+    }, []);
+
     const [formData, setFormData] = useState({
         date: '',
         product: 'Fresh Bricks',
@@ -11,7 +27,8 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
         amount: 0,
         advance: 0,
         balance: 0,
-        pavatiNo: 0,
+        pavatiNo: '',
+        orderNo:'',
         customerName: '',
         site: '',
         vehicleNo: '',
@@ -30,6 +47,7 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                 advance: invoice.advance,
                 balance: invoice.balance,
                 pavatiNo: invoice.pavatiNo,
+                orderNo: invoice.orderNo,
                 customerName: invoice.customerName,
                 site: invoice.site,
                 vehicleNo: invoice.vehicleNo,
@@ -52,7 +70,7 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSave(formData);
+            onSave(formData);
     };
 
     const handleChange = (e) => {
@@ -99,7 +117,7 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                                         value={formData.date}
                                         onChange={handleChange}
                                         required
-                                        className="form-input"
+                                        className="form-input-i"
                                     />
                                 </div>
                                 <div className="form-group">
@@ -111,7 +129,7 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                                         value={formData.product}
                                         onChange={handleChange}
                                         required
-                                        className="form-select"
+                                        className="form-select-i"
                                     >
                                         <option value="Fresh Bricks">Fresh Bricks</option>
                                         <option value="Khanjar">Khanjar</option>
@@ -124,12 +142,25 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                                         Pavati Number <span className="required">*</span>
                                     </label>
                                     <input
-                                        type="number"
+                                        type='text'
                                         name="pavatiNo"
                                         value={formData.pavatiNo}
                                         onChange={handleChange}
                                         required
-                                        className="form-input"
+                                        className="form-input-i"
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">
+                                        Order Number <span className="required">*</span>
+                                    </label>
+                                    <input
+                                        type='text'
+                                        name="orderNo"
+                                        value={formData.orderNo}
+                                        onChange={handleChange}
+                                        required
+                                        className="form-input-i"
                                     />
                                 </div>
                             </div>
@@ -145,15 +176,21 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                                     <label className="form-label">
                                         Customer Name <span className="required">*</span>
                                     </label>
-                                    <input
-                                        type="text"
+                                    <select
                                         name="customerName"
                                         value={formData.customerName}
                                         onChange={handleChange}
                                         required
-                                        className="form-input"
-                                        placeholder="Enter customer name"
-                                    />
+                                        className="form-select-i"
+                                    >
+                                        <option value="">Select Customer</option>
+
+                                        {customers.map((customer) => (
+                                            <option key={customer._id} value={customer.name}>
+                                                {customer.name}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">
@@ -165,7 +202,7 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                                         value={formData.site}
                                         onChange={handleChange}
                                         required
-                                        className="form-input"
+                                        className="form-input-i"
                                         placeholder="Enter site location"
                                     />
                                 </div>
@@ -179,7 +216,7 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                                         value={formData.vehicleNo}
                                         onChange={handleChange}
                                         required
-                                        className="form-input"
+                                        className="form-input-i"
                                         placeholder="Enter vehicle number"
                                     />
                                 </div>
@@ -192,7 +229,7 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                                         name="marfat"
                                         value={formData.marfat}
                                         onChange={handleChange}
-                                        className="form-input"
+                                        className="form-input-i"
                                         placeholder="Enter via/through (optional)"
                                     />
                                 </div>
@@ -210,14 +247,13 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                                         Quantity <span className="required">*</span>
                                     </label>
                                     <input
-                                        type="number"
                                         name="quantity"
                                         value={formData.quantity}
                                         onChange={handleChange}
                                         required
                                         min="1"
-                                        className="form-input"
-                                        placeholder="0"
+                                        className="form-input-i"
+
                                     />
                                 </div>
                                 <div className="form-group">
@@ -232,7 +268,7 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                                         required
                                         step="0.01"
                                         min="0"
-                                        className="form-input"
+                                        className="form-input-i"
                                         placeholder="0.00"
                                     />
                                 </div>
@@ -245,7 +281,7 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                                         name="amount"
                                         value={formData.amount}
                                         readOnly
-                                        className="form-input input-readonly"
+                                        className="form-input-i input-readonly"
                                     />
                                 </div>
                             </div>
@@ -262,13 +298,12 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                                         Advance Amount (₹)
                                     </label>
                                     <input
-                                        type="number"
                                         name="advance"
                                         value={formData.advance}
                                         onChange={handleChange}
                                         min="0"
                                         step="0.01"
-                                        className="form-input"
+                                        className="form-input-i"
                                         placeholder="0.00"
                                     />
                                 </div>
@@ -281,7 +316,7 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                                         name="balance"
                                         value={formData.balance}
                                         readOnly
-                                        className="form-input input-readonly"
+                                        className="form-input-i input-readonly"
                                     />
                                 </div>
                             </div>
@@ -301,7 +336,7 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                                     value={formData.remarks}
                                     onChange={handleChange}
                                     rows={3}
-                                    className="form-textarea"
+                                    className="form-textarea-1 form-input-i"
                                     placeholder="Add any additional notes or remarks..."
                                 />
                             </div>
@@ -343,6 +378,12 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                             className="submit-btn"
                         >
                             {invoice ? 'Update Invoice' : 'Create Invoice'}
+                        </button>
+                        <button
+                            type="submit"
+                            className="submit-btn"
+                        >
+                            Add Order
                         </button>
                     </div>
                 </form>

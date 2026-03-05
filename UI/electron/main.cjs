@@ -5,7 +5,7 @@ const { fork } = require('child_process');
 let serverProcess;
 
 function startServer() {
-  const serverPath = path.join(__dirname, '../backend/server.js');
+  const serverPath = path.join(__dirname, '../../backend/server.js');
   serverProcess = fork(serverPath);
 
   serverProcess.on('error', (err) => {
@@ -17,15 +17,17 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 1200,
     height: 800,
+    icon: path.join(__dirname, '../src/assets/Gemini_Generated_Image_vozrbevozrbevozr (1).ico'),
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false
     },
-    frame: false,              // ❗ disables native buttons
-    titleBarStyle: 'hidden',   // important
+    titleBarOverlay: true
   });
 
+  win.setMenu(null);
   // In development, you might want to load from localhost
   // win.loadURL('http://localhost:5173'); 
   // But keeping original behavior for now:

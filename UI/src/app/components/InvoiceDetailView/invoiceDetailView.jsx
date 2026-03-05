@@ -3,6 +3,7 @@ import { Printer, Download, X } from 'lucide-react';
 // Updated image path to go up one more level
 import brickImage from '../../../assets/799b5e090af0c56945bf82c5795a9cd1c7470511.png';
 import './invoiceDetailView.css';
+import logo from "../../../assets/Gemini_Generated_Image_98lfx498lfx498lf.png";
 
 export function InvoiceDetailView({ invoice, onClose }) {
     const handlePrint = () => {
@@ -90,13 +91,7 @@ export function InvoiceDetailView({ invoice, onClose }) {
                     <div className="print-header-section">
                         <div className="company-branding">
                             <div className="branding-left">
-                                <svg width="80" height="60" viewBox="0 0 80 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <rect x="8" y="8" width="64" height="12" fill="#dc2626" stroke="#991b1b" strokeWidth="1" />
-                                    <rect x="8" y="24" width="64" height="12" fill="#dc2626" stroke="#991b1b" strokeWidth="1" />
-                                    <rect x="8" y="40" width="64" height="12" fill="#dc2626" stroke="#991b1b" strokeWidth="1" />
-                                    <text x="16" y="16" fontSize="8" fill="#fff" fontFamily="Arial, sans-serif">JC</text>
-                                    <text x="16" y="32" fontSize="8" fill="#fff" fontFamily="Arial, sans-serif">Bricks</text>
-                                </svg>
+                                <img src={logo} alt="logo" className='logo-img'/>
                                 <div>
                                     <h1 className="company-name">JC Bricks Manufacturing</h1>
                                     <p className="company-address">Village Bisnawda Dhar Road Indore-453001 (M.P.) India</p>

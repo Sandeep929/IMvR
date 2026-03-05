@@ -141,8 +141,8 @@
     /* text-red-600 */
 }
 
-.form-input,
-.form-select,
+.form-input-i,
+.form-select-i,
 .form-textarea {
     width: 100%;
     padding: 0.625rem 0.75rem;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Eye, Edit, Trash2, Download, Search, Filter, FileText, Loader2 } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2, Download, Search, Filter, FileText, Loader2, CirclePlus } from 'lucide-react';
 import { invoiceAPI } from '@/services/api';
 import { InvoiceForm } from '../InvoiceForm/invoiceForm';
 import { InvoiceDetailView } from '../InvoiceDetailView/invoiceDetailView';
@@ -59,22 +59,24 @@ export function InvoicesList() {
     };
 
     const handleSave = async (invoiceData) => {
-        try {
-            if (editingInvoice) {
-                const res = await invoiceAPI.update(editingInvoice._id, invoiceData);
-                setInvoices(invoices.map(inv =>
-                    inv._id === editingInvoice._id ? res.data : inv
-                ));
-            } else {
-                const res = await invoiceAPI.create(invoiceData);
-                setInvoices([res.data, ...invoices]);
-            }
-            setShowForm(false);
-            setEditingInvoice(null);
-        } catch (err) {
-            alert('Error saving invoice: ' + err.message);
+    try {
+
+        if (editingInvoice) {
+            await invoiceAPI.update(editingInvoice.id, invoiceData);
+        } else {
+            await invoiceAPI.create(invoiceData);
         }
-    };
+
+        // reload invoices from DB
+        await loadInvoices();
+
+        setShowForm(false);
+        setEditingInvoice(null);
+
+    } catch (err) {
+        alert('Error saving invoice: ' + err.message);
+    }
+};
 
     if (showForm) {
         return (
@@ -256,7 +258,7 @@ export function InvoicesList() {
                         <tbody>
                             {filteredInvoices.map((invoice, index) => (
                                 <tr
-                                    key={invoice._id || invoice.id}
+                                    key={invoice.id || invoice.id}
                                     className={index % 2 === 0 ? 'row-even' : 'row-odd'}
                                 >
                                     <td>{index + 1}</td>
@@ -298,6 +300,13 @@ export function InvoicesList() {
                                                 title="Edit"
                                             >
                                                 <Edit size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleEdit(invoice)}
+                                                className="action-btn"
+                                                title="Add more Orders"
+                                            >
+                                                <CirclePlus size={16} />
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(invoice._id)}

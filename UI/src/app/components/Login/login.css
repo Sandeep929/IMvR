@@ -66,11 +66,19 @@
 .branding-logo-box {
   width: 3rem; /* w-12 */
   height: 3rem; /* h-12 */
-  background-color: #dc2626; /* red-600 */
+  background-color: #fff; 
   display: flex;
   align-items: center;
   justify-content: center;
 }
+
+.logo-img {
+  width: 3rem; 
+  height: 3rem;
+  object-fit: cover;
+}
+
+
 
 .branding-title h1 {
   font-size: 1.5rem; /* text-2xl */
@@ -178,10 +186,16 @@
 .mobile-logo-box {
   width: 2.5rem; /* w-10 */
   height: 2.5rem; /* h-10 */
-  background-color: #dc2626; /* red-600 */
+  /* background-color: #dc2626; */
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.mob-logo{
+  width: 2.5rem; 
+  height: 2.5rem;
+  object-fit: cover;
 }
 
 .mobile-logo-text {
@@ -250,7 +264,7 @@
 .form-input {
   width: 100%;
   padding-left: 2.75rem; /* pl-11 */
-  padding-right: 1rem; /* pr-4 */
+  padding-right: 2.75rem; /* pr-4 */
   padding-top: 0.75rem; /* py-3 */
   padding-bottom: 0.75rem;
   border: 1px solid #cbd5e1; /* border-slate-300 */

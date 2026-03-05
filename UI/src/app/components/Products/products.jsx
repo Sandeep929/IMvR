@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Package, TrendingUp, DollarSign, X, AlertTriangle, Loader2 } from 'lucide-react';
 import { productAPI } from '@/services/api';
 import './products.css';
-
 export function Products() {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);

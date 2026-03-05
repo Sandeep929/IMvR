@@ -1,6 +1,7 @@
 import React from 'react';
 import { LayoutDashboard, FileText, Users, Package, BarChart3, Settings } from 'lucide-react';
 import './sidebar.css';
+import logo from "../../../assets/Gemini_Generated_Image_98lfx498lfx498lf.png";
 
 export function Sidebar({ activeTab, setActiveTab }) {
     const menuItems = [
@@ -18,11 +19,7 @@ export function Sidebar({ activeTab, setActiveTab }) {
             <div className="sidebar-header">
                 <div className="sidebar-logo">
                     <div className="logo-icon-box">
-                        <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <rect x="2" y="4" width="28" height="6" fill="white" />
-                            <rect x="2" y="13" width="28" height="6" fill="white" />
-                            <rect x="2" y="22" width="28" height="6" fill="white" />
-                        </svg>
+                        <img src={logo} alt="logo" className='logo-img'/>
                     </div>
                     <div className="logo-text">
                         <h1 className="logo-title">JC Bricks</h1>

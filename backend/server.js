@@ -7,6 +7,9 @@ import productRoutes from './routes/products.js';
 import customerRoutes from './routes/customers.js';
 import dashboardRoutes from './routes/dashboard.js';
 import reportRoutes from './routes/reports.js';
+import { startAutoSync } from './sync/syncService.js';
+
+
 
 dotenv.config();
 
@@ -35,3 +38,5 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
+startAutoSync();

@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 const invoiceSchema = new mongoose.Schema({
+    uuid: {type: String, required: true, unique: true},
     pavatiNo: { type: String, required: true },
     date: { type: Date, required: true },
     customerName: { type: String, required: true },

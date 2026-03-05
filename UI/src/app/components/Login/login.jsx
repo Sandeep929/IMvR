@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Lock, User, AlertCircle } from 'lucide-react';
 import './login.css';
-
+import logo from "../../../assets/Gemini_Generated_Image_98lfx498lfx498lf.png";
 export function Login({ onLogin }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -39,11 +39,7 @@ export function Login({ onLogin }) {
           <div className="branding-header">
             <div className="branding-logo-container">
               <div className="branding-logo-box">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="2" y="4" width="28" height="6" fill="white"/>
-                  <rect x="2" y="13" width="28" height="6" fill="white"/>
-                  <rect x="2" y="22" width="28" height="6" fill="white"/>
-                </svg>
+                <img src={logo} alt="logo" className="logo-img" />
               </div>
               <div className="branding-title">
                 <h1>JC Bricks Manufacturing</h1>
@@ -100,11 +96,7 @@ export function Login({ onLogin }) {
           <div className="mobile-header">
             <div className="mobile-logo">
               <div className="mobile-logo-box">
-                <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="2" y="4" width="28" height="6" fill="white"/>
-                  <rect x="2" y="13" width="28" height="6" fill="white"/>
-                  <rect x="2" y="22" width="28" height="6" fill="white"/>
-                </svg>
+                <img src={logo} alt="mob-logo" className='mob-logo' />
               </div>
               <div className="mobile-logo-text">
                 <h1>JC Bricks Manufacturing</h1>

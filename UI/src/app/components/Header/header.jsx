@@ -21,19 +21,19 @@ export function Header({ title, onLogout }) {
                 </div>
 
                 <div className="header-actions">
-                    <div className="search-wrapper">
+                    {/* <div className="search-wrapper">
                         <Search className="search-icon" size={18} />
                         <input
                             type="text"
                             placeholder="Search..."
                             className="search-input"
                         />
-                    </div>
+                    </div> */}
 
-                    <button className="notification-btn">
+                    {/* <button className="notification-btn">
                         <Bell size={20} className="notification-icon" />
                         <span className="notification-badge"></span>
-                    </button>
+                    </button> */}
 
                     <div className="user-profile">
                         <div className="user-avatar">
