@@ -10,11 +10,23 @@ import { Reports } from './components/Reports/reports';
 import { Settings } from './components/Settings/settings';
 import { InvoiceForm } from './components/InvoiceForm/invoiceForm';
 import { InvoiceDetailView } from './components/InvoiceDetailView/invoiceDetailView';
+import '../styles/theme.css';
 import './App.css';
 
 export default function App() {
     const [activeTab, setActiveTab] = useState('dashboard');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+
+    // Apply theme
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+    }, [theme]);
+
+    const toggleTheme = () => {
+        setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    };
 
     // Check if user is already logged in
     useEffect(() => {
@@ -89,7 +101,12 @@ export default function App() {
         <div className="app-container">
             <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
             <div className="app-main">
-                <Header title={getTitle()} onLogout={handleLogout} />
+                <Header
+                    title={getTitle()}
+                    onLogout={handleLogout}
+                    theme={theme}
+                    toggleTheme={toggleTheme}
+                />
                 <div className="app-content">
                     {renderContent()}
                 </div>

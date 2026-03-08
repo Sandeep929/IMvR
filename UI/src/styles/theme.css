@@ -1,0 +1,32 @@
+/* theme.css */
+:root {
+    --bg-color: #f8fafc;
+    --card-bg: #ffffff;
+    --text-main: #0f172a;
+    --text-muted: #475569;
+    --border-color: #e2e8f0;
+    --sidebar-bg: #1e293b;
+    --stat-card-bg: #ffffff;
+    --table-header-bg: #f1f5f9;
+    --input-bg: #ffffff;
+    --input-border: #cbd5e1;
+    --hover-bg: #f8fafc;
+    --row-even-bg: var(--card-bg);
+    --row-odd-bg: rgba(248, 250, 252, 0.5);
+}
+
+[data-theme='dark'] {
+    --bg-color: #0f172a;
+    --card-bg: #1e293b;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: #334155;
+    --sidebar-bg: #020617;
+    --stat-card-bg: #1e293b;
+    --table-header-bg: #0f172a;
+    --input-bg: #0f172a;
+    --input-border: #475569;
+    --hover-bg: #334155;
+    --row-even-bg: var(--card-bg);
+    --row-odd-bg: rgba(15, 23, 42, 0.5);
+}

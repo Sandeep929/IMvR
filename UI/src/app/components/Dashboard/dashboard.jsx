@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, DollarSign, FileText, Users, Package, ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react';
+import { TrendingUp, TrendingDown, IndianRupee, FileText, Users, Package, ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react';
 import { dashboardAPI, invoiceAPI } from '@/services/api';
 import './dashboard.css';
 
@@ -54,10 +54,10 @@ export function Dashboard({ setActiveTab }) {
 
     const totalInvoices = dashboardData?.totalInvoices || 0;
     const totalAmount = dashboardData?.totalRevenue || 0;
-    const totalAdvance = invoices.reduce((sum, inv) => sum + (inv.advance || 0), 0);
+    const totalAdvance = invoices.reduce((sum, inv) => sum + (inv.totalAdvance || 0), 0);
     const totalBalance = dashboardData?.totalBalance || 0;
     const uniqueCustomers = dashboardData?.totalCustomers || 0;
-    const totalQuantity = invoices.reduce((sum, inv) => sum + (inv.quantity || 0), 0);
+    const totalQuantity = invoices.reduce((sum, inv) => sum + (inv.items || []).reduce((s, item) => s + Number(item.quantity || 0), 0), 0);
     const revenueGrowth = dashboardData?.revenueGrowth || '0';
 
     const stats = [
@@ -67,7 +67,7 @@ export function Dashboard({ setActiveTab }) {
             change: `${revenueGrowth > 0 ? '+' : ''}${revenueGrowth}%`,
             changeLabel: 'vs last month',
             trend: revenueGrowth >= 0 ? 'up' : 'down',
-            icon: DollarSign,
+            icon: IndianRupee,
             iconBg: 'bg-slate-900-custom',
         },
         {
@@ -77,7 +77,7 @@ export function Dashboard({ setActiveTab }) {
             changeLabel: 'collection rate',
             trend: 'up',
             icon: TrendingUp,
-            iconBg: 'bg-green-600-custom',
+            iconBg: 'bg-slate-900-custom',
         },
         {
             title: 'Balance Due',
@@ -86,7 +86,7 @@ export function Dashboard({ setActiveTab }) {
             changeLabel: 'of total revenue',
             trend: 'down',
             icon: TrendingDown,
-            iconBg: 'bg-red-600-custom',
+            iconBg: 'bg-slate-900-custom',
         },
         {
             title: 'Total Invoices',
@@ -95,7 +95,7 @@ export function Dashboard({ setActiveTab }) {
             changeLabel: 'this month',
             trend: 'up',
             icon: FileText,
-            iconBg: 'bg-blue-600-custom',
+            iconBg: 'bg-slate-900-custom',
         }
     ];
 
@@ -104,7 +104,7 @@ export function Dashboard({ setActiveTab }) {
     // Build top customers from invoice data
     const topCustomers = Object.entries(
         invoices.reduce((acc, inv) => {
-            acc[inv.customerName] = (acc[inv.customerName] || 0) + inv.amount;
+            acc[inv.customerName] = (acc[inv.customerName] || 0) + (inv.totalAmount || 0);
             return acc;
         }, {})
     )
@@ -173,7 +173,7 @@ export function Dashboard({ setActiveTab }) {
                     <div className="secondary-card">
                         <div className="secondary-card-content">
                             <div className="secondary-icon-box">
-                                <DollarSign size={20} className="secondary-icon" />
+                                <IndianRupee size={20} className="secondary-icon" />
                             </div>
                             <div>
                                 <p className="secondary-title">Avg Invoice Value</p>
@@ -205,14 +205,16 @@ export function Dashboard({ setActiveTab }) {
                                             <p className="invoice-number">{invoice.pavatiNo}</p>
                                         </div>
                                         <div className="invoice-amount-box">
-                                            <p className="invoice-amount">₹ {(invoice.amount || 0).toLocaleString()}</p>
+                                            <p className="invoice-amount">₹ {(invoice.totalAmount || 0).toLocaleString()}</p>
                                             <p className="invoice-date">
                                                 {new Date(invoice.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
                                             </p>
                                         </div>
                                     </div>
                                     <div className="invoice-meta">
-                                        <span className="invoice-units">{invoice.quantity} units</span>
+                                        <span className="invoice-units">
+                                            {(invoice.items || []).map(i => i.product).join(', ') || 'N/A'}
+                                        </span>
                                         {invoice.balance > 0 ? (
                                             <span className="status-badge status-due">
                                                 Due: ₹{(invoice.balance || 0).toLocaleString()}

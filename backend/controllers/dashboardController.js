@@ -26,7 +26,7 @@ export const getDashboardStats = (req, res) => {
     =============================== */
 
     const totalRevenue = invoices.reduce(
-      (sum, inv) => sum + (inv.amount || 0), 0
+      (sum, inv) => sum + (inv.totalAmount || 0), 0
     );
 
     const totalBalance = invoices.reduce(
@@ -49,7 +49,11 @@ export const getDashboardStats = (req, res) => {
       SELECT * FROM invoices
       ORDER BY date DESC
       LIMIT 5
-    `).all();
+    `).all().map(inv => {
+      const items = db.prepare('SELECT * FROM invoice_items WHERE invoiceUuid = ?').all(inv.uuid);
+      const payments = db.prepare('SELECT * FROM invoice_payments WHERE invoiceUuid = ?').all(inv.uuid);
+      return { ...inv, items, payments };
+    });
 
 
     /* ===============================
@@ -82,20 +86,20 @@ export const getDashboardStats = (req, res) => {
 
 
     const currentMonthRevenue = currentMonthInvoices.reduce(
-      (sum, inv) => sum + (inv.amount || 0), 0
+      (sum, inv) => sum + (inv.totalAmount || 0), 0
     );
 
     const lastMonthRevenue = lastMonthInvoices.reduce(
-      (sum, inv) => sum + (inv.amount || 0), 0
+      (sum, inv) => sum + (inv.totalAmount || 0), 0
     );
 
 
     const revenueGrowth =
       lastMonthRevenue > 0
         ? (
-            (currentMonthRevenue - lastMonthRevenue) /
-            lastMonthRevenue * 100
-          ).toFixed(1)
+          (currentMonthRevenue - lastMonthRevenue) /
+          lastMonthRevenue * 100
+        ).toFixed(1)
         : 0;
 
 

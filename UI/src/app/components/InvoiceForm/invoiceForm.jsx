@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Plus, Trash2, MessageCircle } from 'lucide-react';
+import { shareInvoiceOnWhatsApp } from '../../../utils/whatsapp';
 import './invoiceForm.css';
 
 export function InvoiceForm({ invoice, onSave, onCancel }) {
     const [customers, setCustomers] = useState([]);
+    const [products, setProducts] = useState([
+        { id: 1, name: 'Fresh Bricks', rate: 6.8 },
+        { id: 2, name: 'Khanjar', rate: 5.5 },
+        { id: 3, name: 'Red Bricks', rate: 7.2 },
+        { id: 4, name: 'Fly Ash Bricks', rate: 6.0 }
+    ]);
 
     useEffect(() => {
         const fetchCustomers = async () => {
@@ -20,67 +27,117 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
     }, []);
 
     const [formData, setFormData] = useState({
-        date: '',
-        product: 'Fresh Bricks',
-        quantity: 0,
-        rate: 6.8,
-        amount: 0,
-        advance: 0,
-        balance: 0,
+        date: new Date().toISOString().split('T')[0],
         pavatiNo: '',
-        orderNo:'',
+        orderNo: '',
         customerName: '',
         site: '',
         vehicleNo: '',
         marfat: '',
-        remarks: ''
+        remarks: '',
+        items: [
+            { product: 'Fresh Bricks', quantity: 0, rate: 6.8, amount: 0 }
+        ],
+        payments: [
+            { date: new Date().toISOString().split('T')[0], amount: 0, method: 'Cash', remarks: 'Advance' }
+        ],
+        totalAmount,
+        totalAdvance,
+        balance,
+        shareOnWhatsApp: false
     });
 
     useEffect(() => {
         if (invoice) {
             setFormData({
-                date: invoice.date,
-                product: invoice.product,
-                quantity: invoice.quantity,
-                rate: invoice.rate,
-                amount: invoice.amount,
-                advance: invoice.advance,
-                balance: invoice.balance,
-                pavatiNo: invoice.pavatiNo,
-                orderNo: invoice.orderNo,
-                customerName: invoice.customerName,
-                site: invoice.site,
-                vehicleNo: invoice.vehicleNo,
-                marfat: invoice.marfat,
-                remarks: invoice.remarks
+                ...invoice,
+                date: invoice.date ? new Date(invoice.date).toISOString().split('T')[0] : '',
+                items: invoice.items || [{ product: 'Fresh Bricks', quantity: 0, rate: 6.8, amount: 0 }],
+                payments: invoice.payments || [{ date: new Date().toISOString().split('T')[0], amount: 0, method: 'Cash', remarks: 'Advance' }]
             });
         }
     }, [invoice]);
 
-    // Auto-calculate amount when quantity or rate changes
+    // Recalculate totals whenever items or payments change
     useEffect(() => {
-        const calculatedAmount = formData.quantity * formData.rate;
-        const calculatedBalance = calculatedAmount - formData.advance;
+        const totalAmount = formData.items.reduce((sum, item) => sum + (item.amount || 0), 0);
+        const totalAdvance = formData.payments.reduce((sum, payment) => sum + (parseFloat(payment.amount) || 0), 0);
+        const balance = totalAmount - totalAdvance;
+
         setFormData(prev => ({
             ...prev,
-            amount: calculatedAmount,
-            balance: calculatedBalance
+            totalAmount,
+            totalAdvance,
+            balance
         }));
-    }, [formData.quantity, formData.rate, formData.advance]);
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-            onSave(formData);
-    };
+    }, [formData.items, formData.payments]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    // Item Handlers
+    const handleItemChange = (index, field, value) => {
+        const newItems = [...formData.items];
+        newItems[index][field] = field === 'product' ? value : parseFloat(value) || 0;
+
+        if (field === 'product') {
+            const selectedProduct = products.find(p => p.name === value);
+            if (selectedProduct) {
+                newItems[index].rate = selectedProduct.rate;
+            }
+        }
+
+        newItems[index].amount = newItems[index].quantity * newItems[index].rate;
+        setFormData(prev => ({ ...prev, items: newItems }));
+    };
+
+    const addItem = () => {
         setFormData(prev => ({
             ...prev,
-            [name]: ['quantity', 'rate', 'advance', 'pavatiNo'].includes(name)
-                ? parseFloat(value) || 0
-                : value
+            items: [...prev.items, { product: 'Fresh Bricks', quantity: 0, rate: 6.8, amount: 0 }]
         }));
+    };
+
+    const removeItem = (index) => {
+        if (formData.items.length > 1) {
+            const newItems = formData.items.filter((_, i) => i !== index);
+            setFormData(prev => ({ ...prev, items: newItems }));
+        }
+    };
+
+    // Payment Handlers
+    const handlePaymentChange = (index, field, value) => {
+        const newPayments = [...formData.payments];
+        newPayments[index][field] = field === 'amount' ? parseFloat(value) || 0 : value;
+        setFormData(prev => ({ ...prev, payments: newPayments }));
+    };
+
+    const addPayment = () => {
+        setFormData(prev => ({
+            ...prev,
+            payments: [...prev.payments, { date: new Date().toISOString().split('T')[0], amount: 0, method: 'Cash', remarks: '' }]
+        }));
+    };
+
+    const removePayment = (index) => {
+        if (formData.payments.length > 1) {
+            const newPayments = formData.payments.filter((_, i) => i !== index);
+            setFormData(prev => ({ ...prev, payments: newPayments }));
+        }
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onSave(formData);
+
+        if (formData.shareOnWhatsApp) {
+            const customer = customers.find(c => c.name === formData.customerName);
+            if (customer && (customer.phone || customer.mobile)) {
+                shareInvoiceOnWhatsApp(formData, customer.phone || customer.mobile);
+            }
+        }
     };
 
     return (
@@ -91,10 +148,7 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                         <h3>{invoice ? 'Edit Invoice' : 'Create New Invoice'}</h3>
                         <p>Fill in the invoice details below</p>
                     </div>
-                    <button
-                        onClick={onCancel}
-                        className="close-btn"
-                    >
+                    <button onClick={onCancel} className="close-btn">
                         <X size={20} />
                     </button>
                 </div>
@@ -103,242 +157,180 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                     <div className="invoice-form-body">
                         {/* Basic Information */}
                         <div className="form-section">
-                            <h4 className="section-title">
-                                Basic Information
-                            </h4>
+                            <h4 className="section-title">Basic Information</h4>
                             <div className="form-grid-3">
                                 <div className="form-group">
-                                    <label className="form-label">
-                                        Date <span className="required">*</span>
-                                    </label>
-                                    <input
-                                        type="date"
-                                        name="date"
-                                        value={formData.date}
-                                        onChange={handleChange}
-                                        required
-                                        className="form-input-i"
-                                    />
+                                    <label className="form-label">Date <span className="required">*</span></label>
+                                    <input type="date" name="date" value={formData.date} onChange={handleChange} required className="form-input-i" />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">
-                                        Product <span className="required">*</span>
-                                    </label>
-                                    <select
-                                        name="product"
-                                        value={formData.product}
-                                        onChange={handleChange}
-                                        required
-                                        className="form-select-i"
-                                    >
-                                        <option value="Fresh Bricks">Fresh Bricks</option>
-                                        <option value="Khanjar">Khanjar</option>
-                                        <option value="Red Bricks">Red Bricks</option>
-                                        <option value="Fly Ash Bricks">Fly Ash Bricks</option>
-                                    </select>
+                                    <label className="form-label">Pavati Number <span className="required">*</span></label>
+                                    <input type='text' name="pavatiNo" value={formData.pavatiNo} onChange={handleChange} required className="form-input-i" />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">
-                                        Pavati Number <span className="required">*</span>
-                                    </label>
-                                    <input
-                                        type='text'
-                                        name="pavatiNo"
-                                        value={formData.pavatiNo}
-                                        onChange={handleChange}
-                                        required
-                                        className="form-input-i"
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">
-                                        Order Number <span className="required">*</span>
-                                    </label>
-                                    <input
-                                        type='text'
-                                        name="orderNo"
-                                        value={formData.orderNo}
-                                        onChange={handleChange}
-                                        required
-                                        className="form-input-i"
-                                    />
+                                    <label className="form-label">Order Number</label>
+                                    <input type='text' name="orderNo" value={formData.orderNo} onChange={handleChange} className="form-input-i" />
                                 </div>
                             </div>
                         </div>
 
                         {/* Customer Information */}
                         <div className="form-section">
-                            <h4 className="section-title">
-                                Customer Information
-                            </h4>
+                            <h4 className="section-title">Customer Information</h4>
                             <div className="form-grid-2">
                                 <div className="form-group">
-                                    <label className="form-label">
-                                        Customer Name <span className="required">*</span>
-                                    </label>
-                                    <select
-                                        name="customerName"
-                                        value={formData.customerName}
-                                        onChange={handleChange}
-                                        required
-                                        className="form-select-i"
-                                    >
+                                    <label className="form-label">Customer Name <span className="required">*</span></label>
+                                    <select name="customerName" value={formData.customerName} onChange={handleChange} required className="form-select-i">
                                         <option value="">Select Customer</option>
-
                                         {customers.map((customer) => (
-                                            <option key={customer._id} value={customer.name}>
-                                                {customer.name}
-                                            </option>
+                                            <option key={customer.id || customer.uuid} value={customer.name}>{customer.name}</option>
                                         ))}
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">
-                                        Site Location <span className="required">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="site"
-                                        value={formData.site}
-                                        onChange={handleChange}
-                                        required
-                                        className="form-input-i"
-                                        placeholder="Enter site location"
-                                    />
+                                    <label className="form-label">Site Location <span className="required">*</span></label>
+                                    <input type="text" name="site" value={formData.site} onChange={handleChange} required className="form-input-i" placeholder="Enter site location" />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">
-                                        Vehicle Number <span className="required">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="vehicleNo"
-                                        value={formData.vehicleNo}
-                                        onChange={handleChange}
-                                        required
-                                        className="form-input-i"
-                                        placeholder="Enter vehicle number"
-                                    />
+                                    <label className="form-label">Vehicle Number <span className="required">*</span></label>
+                                    <input type="text" name="vehicleNo" value={formData.vehicleNo} onChange={handleChange} required className="form-input-i" placeholder="Enter vehicle number" />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">
-                                        Marfat (Via)
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="marfat"
-                                        value={formData.marfat}
-                                        onChange={handleChange}
-                                        className="form-input-i"
-                                        placeholder="Enter via/through (optional)"
-                                    />
+                                    <label className="form-label">Marfat (Via)</label>
+                                    <input type="text" name="marfat" value={formData.marfat} onChange={handleChange} className="form-input-i" placeholder="Enter via/through" />
                                 </div>
                             </div>
                         </div>
 
-                        {/* Pricing Details */}
+                        {/* Products / Items */}
                         <div className="form-section">
-                            <h4 className="section-title">
-                                Pricing Details
-                            </h4>
-                            <div className="form-grid-3">
-                                <div className="form-group">
-                                    <label className="form-label">
-                                        Quantity <span className="required">*</span>
-                                    </label>
-                                    <input
-                                        name="quantity"
-                                        value={formData.quantity}
-                                        onChange={handleChange}
-                                        required
-                                        min="1"
-                                        className="form-input-i"
-
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">
-                                        Rate (₹) <span className="required">*</span>
-                                    </label>
-                                    <input
-                                        type="number"
-                                        name="rate"
-                                        value={formData.rate}
-                                        onChange={handleChange}
-                                        required
-                                        step="0.01"
-                                        min="0"
-                                        className="form-input-i"
-                                        placeholder="0.00"
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">
-                                        Total Amount (₹)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        name="amount"
-                                        value={formData.amount}
-                                        readOnly
-                                        className="form-input-i input-readonly"
-                                    />
-                                </div>
+                            <div className="section-header-row">
+                                <h4 className="section-title">Products / Orders</h4>
+                                <button type="button" onClick={addItem} className="add-row-btn">
+                                    <Plus size={16} /> Add Product
+                                </button>
+                            </div>
+                            <div className="items-table-container">
+                                <table className="items-edit-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Product</th>
+                                            <th>Quantity</th>
+                                            <th>Rate</th>
+                                            <th>Amount</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {formData.items.map((item, index) => (
+                                            <tr key={index}>
+                                                <td>
+                                                    <select
+                                                        value={item.product}
+                                                        onChange={(e) => handleItemChange(index, 'product', e.target.value)}
+                                                        className="form-select-i"
+                                                    >
+                                                        {products.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <input
+                                                        type="number"
+                                                        value={item.quantity}
+                                                        onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+                                                        className="form-input-i"
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <input
+                                                        type="number"
+                                                        value={item.rate}
+                                                        onChange={(e) => handleItemChange(index, 'rate', e.target.value)}
+                                                        className="form-input-i"
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <input type="number" value={item.amount} readOnly className="form-input-i input-readonly" />
+                                                </td>
+                                                <td>
+                                                    <button type="button" onClick={() => removeItem(index)} className="delete-row-btn" disabled={formData.items.length === 1}>
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
 
-                        {/* Payment Details */}
+                        {/* Payments / Installments */}
                         <div className="form-section">
-                            <h4 className="section-title">
-                                Payment Details
-                            </h4>
-                            <div className="form-grid-2">
-                                <div className="form-group">
-                                    <label className="form-label">
-                                        Advance Amount (₹)
-                                    </label>
-                                    <input
-                                        name="advance"
-                                        value={formData.advance}
-                                        onChange={handleChange}
-                                        min="0"
-                                        step="0.01"
-                                        className="form-input-i"
-                                        placeholder="0.00"
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">
-                                        Balance Amount (₹)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        name="balance"
-                                        value={formData.balance}
-                                        readOnly
-                                        className="form-input-i input-readonly"
-                                    />
-                                </div>
+                            <div className="section-header-row">
+                                <h4 className="section-title">Payment History / Installments</h4>
+                                <button type="button" onClick={addPayment} className="add-row-btn">
+                                    <Plus size={16} /> Add Payment
+                                </button>
                             </div>
-                        </div>
-
-                        {/* Additional Information */}
-                        <div className="form-section">
-                            <h4 className="section-title">
-                                Additional Information
-                            </h4>
-                            <div className="form-group">
-                                <label className="form-label">
-                                    Remarks
-                                </label>
-                                <textarea
-                                    name="remarks"
-                                    value={formData.remarks}
-                                    onChange={handleChange}
-                                    rows={3}
-                                    className="form-textarea-1 form-input-i"
-                                    placeholder="Add any additional notes or remarks..."
-                                />
+                            <div className="items-table-container">
+                                <table className="items-edit-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Amount</th>
+                                            <th>Method</th>
+                                            <th>Remarks</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {formData.payments.map((payment, index) => (
+                                            <tr key={index}>
+                                                <td>
+                                                    <input
+                                                        type="date"
+                                                        value={payment.date ? new Date(payment.date).toISOString().split('T')[0] : ''}
+                                                        onChange={(e) => handlePaymentChange(index, 'date', e.target.value)}
+                                                        className="form-input-i"
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <input
+                                                        type="number"
+                                                        value={payment.amount}
+                                                        onChange={(e) => handlePaymentChange(index, 'amount', e.target.value)}
+                                                        className="form-input-i"
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <select
+                                                        value={payment.method}
+                                                        onChange={(e) => handlePaymentChange(index, 'method', e.target.value)}
+                                                        className="form-select-i"
+                                                    >
+                                                        <option value="Cash">Cash</option>
+                                                        <option value="Online">Online</option>
+                                                        <option value="Cheque">Cheque</option>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <input
+                                                        type="text"
+                                                        value={payment.remarks}
+                                                        onChange={(e) => handlePaymentChange(index, 'remarks', e.target.value)}
+                                                        className="form-input-i"
+                                                        placeholder="e.g. Advance"
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <button type="button" onClick={() => removePayment(index)} className="delete-row-btn" disabled={formData.payments.length === 1}>
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
 
@@ -348,11 +340,11 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                             <div className="summary-grid">
                                 <div>
                                     <p className="summary-item-label">Total Amount</p>
-                                    <p className="summary-item-value text-slate-900">₹ {formData.amount.toLocaleString()}</p>
+                                    <p className="summary-item-value text-slate-900">₹ {formData.totalAmount.toLocaleString()}</p>
                                 </div>
                                 <div>
-                                    <p className="summary-item-label">Advance Paid</p>
-                                    <p className="summary-item-value text-green-700">₹ {formData.advance.toLocaleString()}</p>
+                                    <p className="summary-item-label">Total Paid</p>
+                                    <p className="summary-item-value text-green-700">₹ {formData.totalAdvance.toLocaleString()}</p>
                                 </div>
                                 <div>
                                     <p className="summary-item-label">Balance Due</p>
@@ -362,29 +354,33 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Remarks */}
+                        <div className="form-section">
+                            <div className="form-group">
+                                <label className="form-label">General Remarks</label>
+                                <textarea name="remarks" value={formData.remarks} onChange={handleChange} rows={2} className="form-textarea-1 form-input-i" placeholder="Internal notes..." />
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Form Actions */}
                     <div className="invoice-form-footer">
-                        <button
-                            type="button"
-                            onClick={onCancel}
-                            className="cancel-btn"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            className="submit-btn"
-                        >
-                            {invoice ? 'Update Invoice' : 'Create Invoice'}
-                        </button>
-                        <button
-                            type="submit"
-                            className="submit-btn"
-                        >
-                            Add Order
-                        </button>
+                        <div className="footer-options">
+                            <label className="share-whatsapp-label">
+                                <input
+                                    type="checkbox"
+                                    name="shareOnWhatsApp"
+                                    checked={formData.shareOnWhatsApp}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, shareOnWhatsApp: e.target.checked }))}
+                                />
+                                <MessageCircle size={16} className="wa-icon" />
+                                Share on WhatsApp
+                            </label>
+                        </div>
+                        <div className="footer-btns">
+                            <button type="button" onClick={onCancel} className="cancel-btn">Cancel</button>
+                            <button type="submit" className="submit-btn">{invoice ? 'Update Invoice' : 'Create Invoice'}</button>
+                        </div>
                     </div>
                 </form>
             </div>

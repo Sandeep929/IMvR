@@ -2,23 +2,19 @@
 
 .invoices-container {
     padding: 2rem;
-    /* p-8 */
-    background-color: #f8fafc;
-    /* bg-slate-50 */
+    background-color: var(--bg-color);
     min-height: 100vh;
+    transition: background-color 0.3s ease;
 }
 
 .invoices-card {
-    background-color: #ffffff;
-    border: 1px solid #e2e8f0;
-    /* border-slate-200 */
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
 }
 
 .invoices-header {
     padding: 1.25rem 1.5rem;
-    /* px-6 py-5 */
-    border-bottom: 1px solid #e2e8f0;
-    /* border-slate-200 */
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -26,25 +22,19 @@
 
 .header-title h3 {
     font-size: 1.125rem;
-    /* text-lg */
-    color: #0f172a;
-    /* text-slate-900 */
+    color: var(--text-main);
     margin-bottom: 0.25rem;
-    /* mb-1 */
     margin-top: 0;
 }
 
 .header-title p {
     font-size: 0.875rem;
-    /* text-sm */
-    color: #475569;
-    /* text-slate-600 */
+    color: var(--text-muted);
     margin: 0;
 }
 
 .total-count {
-    color: #0f172a;
-    /* text-slate-900 */
+    color: var(--text-main);
     font-weight: 500;
 }
 
@@ -56,54 +46,42 @@
 
 .export-btn {
     padding: 0.5rem 1rem;
-    /* px-4 py-2 */
-    background-color: #ffffff;
-    border: 1px solid #cbd5e1;
-    /* border-slate-300 */
-    color: #334155;
-    /* text-slate-700 */
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    /* gap-2 */
     transition: background-color 0.2s;
     font-size: 0.875rem;
 }
 
 .export-btn:hover {
-    background-color: #f8fafc;
-    /* hover:bg-slate-50 */
+    background-color: var(--hover-bg);
 }
 
 .new-invoice-btn {
     padding: 0.5rem 1rem;
-    /* px-4 py-2 */
-    background-color: #0f172a;
-    /* bg-slate-900 */
-    color: #ffffff;
+    background-color: var(--text-main);
+    color: var(--card-bg);
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    /* gap-2 */
     transition: background-color 0.2s;
     font-size: 0.875rem;
 }
 
 .new-invoice-btn:hover {
-    background-color: #1e293b;
-    /* hover:bg-slate-800 */
+    background-color: var(--text-muted);
 }
 
 .tool-bar {
     padding: 1.5rem;
-    /* p-6 */
-    border-bottom: 1px solid #e2e8f0;
-    /* border-slate-200 */
-    background-color: #f8fafc;
-    /* bg-slate-50 */
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--hover-bg);
 }
 
 .search-filter-bar {
@@ -129,35 +107,28 @@
 .search-icon {
     position: absolute;
     left: 0.75rem;
-    /* left-3 */
     top: 50%;
     transform: translateY(-50%);
-    color: #94a3b8;
-    /* text-slate-400 */
+    color: var(--text-muted);
 }
 
 .search-input {
     width: 100%;
     padding-left: 2.5rem;
-    /* pl-10 */
     padding-right: 1rem;
-    /* pr-4 */
     padding-top: 0.625rem;
-    /* py-2.5 */
     padding-bottom: 0.625rem;
-    border: 1px solid #cbd5e1;
-    /* border-slate-300 */
-    background-color: #ffffff;
+    border: 1px solid var(--input-border);
+    background-color: var(--input-bg);
+    color: var(--text-main);
     font-size: 0.875rem;
-    /* text-sm */
     box-sizing: border-box;
 }
 
 .search-input:focus {
     outline: none;
-    box-shadow: 0 0 0 1px #0f172a;
-    /* ring-1 ring-slate-900 */
-    border-color: #0f172a;
+    box-shadow: 0 0 0 1px var(--text-main);
+    border-color: var(--text-main);
 }
 
 .filters {
@@ -168,20 +139,17 @@
 
 .filter-select {
     padding: 0.625rem 1rem;
-    /* px-4 py-2.5 */
-    border: 1px solid #cbd5e1;
-    /* border-slate-300 */
-    background-color: #ffffff;
+    border: 1px solid var(--input-border);
+    background-color: var(--input-bg);
+    color: var(--text-main);
     font-size: 0.875rem;
-    /* text-sm */
     box-sizing: border-box;
 }
 
 .filter-select:focus {
     outline: none;
-    box-shadow: 0 0 0 1px #0f172a;
-    /* ring-1 ring-slate-900 */
-    border-color: #0f172a;
+    box-shadow: 0 0 0 1px var(--text-main);
+    border-color: var(--text-main);
 }
 
 .stats-summary {
@@ -198,28 +166,21 @@
 }
 
 .summary-card {
-    background-color: #ffffff;
-    border: 1px solid #e2e8f0;
-    /* border-slate-200 */
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
     padding: 1rem;
-    /* p-4 */
 }
 
 .summary-label {
     font-size: 0.75rem;
-    /* text-xs */
-    color: #475569;
-    /* text-slate-600 */
+    color: var(--text-muted);
     margin-bottom: 0.5rem;
-    /* mb-2 */
     text-transform: uppercase;
     letter-spacing: 0.025em;
-    /* tracking-wide */
     margin-top: 0;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    /* gap-2 */
 }
 
 .summary-value {
@@ -229,7 +190,16 @@
 }
 
 .text-slate-900 {
-    color: #0f172a;
+    color: var(--text-main);
+}
+
+/* WhatsApp Share Button */
+.action-btn.wa-btn {
+    color: #16a34a;
+}
+
+.action-btn.wa-btn:hover {
+    background-color: #dcfce7;
 }
 
 .text-green-700 {
@@ -251,23 +221,17 @@
 }
 
 .invoices-table thead tr {
-    background-color: #f1f5f9;
-    /* bg-slate-100 */
-    border-bottom: 1px solid #e2e8f0;
-    /* border-slate-200 */
+    background-color: var(--table-header-bg);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .invoices-table th {
     text-align: left;
     padding: 0.75rem 1rem;
-    /* px-4 py-3 */
     font-size: 0.75rem;
-    /* text-xs */
-    color: #334155;
-    /* text-slate-700 */
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.025em;
-    /* tracking-wide */
     font-weight: 600;
 }
 
@@ -280,36 +244,30 @@
 }
 
 .invoices-table tbody {
-    background-color: #ffffff;
+    background-color: var(--card-bg);
 }
 
 .invoices-table tbody tr {
-    border-bottom: 1px solid #e2e8f0;
-    /* border-slate-200 */
-    transition: background-color 0.2s;
+    border-bottom: 1px solid var(--border-color);
+    transition: all 0.2s;
 }
 
 .invoices-table tbody tr:hover {
-    background-color: #f8fafc;
-    /* hover:bg-slate-50 */
+    background-color: var(--hover-bg);
 }
 
 .invoices-table tbody tr.row-even {
-    background-color: #ffffff;
+    background-color: var(--row-even-bg);
 }
 
 .invoices-table tbody tr.row-odd {
-    background-color: rgba(248, 250, 252, 0.5);
-    /* bg-slate-50/50 */
+    background-color: var(--row-odd-bg);
 }
 
 .invoices-table td {
     padding: 0.75rem 1rem;
-    /* px-4 py-3 */
     font-size: 0.875rem;
-    /* text-sm */
-    color: #334155;
-    /* text-slate-700 */
+    color: var(--text-main);
     vertical-align: middle;
 }
 
@@ -331,19 +289,16 @@
 
 .action-btn {
     padding: 0.375rem;
-    /* p-1.5 */
     border: none;
     background: none;
     cursor: pointer;
     transition: background-color 0.2s;
     border-radius: 0.25rem;
-    color: #334155;
-    /* text-slate-700 */
+    color: var(--text-muted);
 }
 
 .action-btn:hover {
-    background-color: #e2e8f0;
-    /* hover:bg-slate-200 */
+    background-color: var(--hover-bg);
 }
 
 .action-btn.delete-btn {
@@ -365,29 +320,22 @@
 .empty-icon {
     margin-left: auto;
     margin-right: auto;
-    color: #cbd5e1;
-    /* text-slate-300 */
+    color: var(--border-color);
     margin-bottom: 1rem;
-    /* mb-4 */
 }
 
 .empty-text {
-    color: #475569;
-    /* text-slate-600 */
+    color: var(--text-muted);
     margin-bottom: 0.5rem;
-    /* mb-2 */
     margin-top: 0;
 }
 
 .empty-subtext {
     font-size: 0.875rem;
-    /* text-sm */
-    color: #64748b;
-    /* text-slate-500 */
+    color: var(--text-muted);
     margin: 0;
 }
 
-/* Utility Colors for text */
 .text-slate-900 {
-    color: #0f172a;
+    color: var(--text-main);
 }

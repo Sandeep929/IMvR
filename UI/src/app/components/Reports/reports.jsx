@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, TrendingUp, DollarSign, FileText, Users, Loader2 } from 'lucide-react';
+import { Download, TrendingUp, IndianRupee, FileText, Users, Loader2 } from 'lucide-react';
 import { reportAPI } from '@/services/api';
 import './reports.css';
 
@@ -24,6 +24,35 @@ export function Reports() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleExport = () => {
+        if (!data) return;
+
+        const { summary, topCustomers } = data;
+        const headers = ['Metric', 'Value'];
+        const csvRows = [
+            ['Business Analytics Report', new Date().toLocaleDateString()].join(','),
+            [''],
+            headers.join(','),
+            ['Total Revenue', summary.totalRevenue],
+            ['Total Invoices', summary.totalInvoices],
+            ['Outstanding Balance', summary.totalBalance],
+            [''],
+            ['Top Customers', 'Revenue'],
+            ...topCustomers.map(c => [`"${c.name}"`, c.totalAmount])
+        ];
+
+        const csvContent = csvRows.map(row => row.join(',')).join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `Business_Report_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     if (loading) {
@@ -69,7 +98,7 @@ export function Reports() {
                             <option value="90">Last 90 Days</option>
                             <option value="365">Last Year</option>
                         </select>
-                        <button className="export-btn">
+                        <button onClick={handleExport} className="export-btn">
                             <Download size={18} />
                             Export Report
                         </button>
@@ -79,7 +108,7 @@ export function Reports() {
                 <div className="stats-grid">
                     <div className="stat-box">
                         <div className="stat-header">
-                            <DollarSign size={16} className="stat-icon" />
+                            <IndianRupee size={16} className="stat-icon" />
                             <p className="stat-label">Total Revenue</p>
                         </div>
                         <p className="stat-value">₹ {summary?.totalRevenue?.toLocaleString() || 0}</p>

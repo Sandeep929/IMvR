@@ -6,24 +6,19 @@
 }
 
 .invoice-detail-card {
-    background-color: #ffffff;
+    background-color: var(--card-bg);
     border-radius: 0.5rem;
-    /* rounded-lg */
-    border: 1px solid #e2e8f0;
-    /* border-slate-200 */
+    border: 1px solid var(--border-color);
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    /* shadow-sm */
     max-width: 56rem;
-    /* max-w-4xl */
     margin-left: auto;
     margin-right: auto;
+    transition: all 0.3s ease;
 }
 
 .invoice-detail-header {
     padding: 1.5rem;
-    /* p-6 */
-    border-bottom: 1px solid #e2e8f0;
-    /* border-slate-200 */
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -37,10 +32,8 @@
 
 .header-title {
     font-size: 1.25rem;
-    /* text-xl */
     margin: 0;
-    color: #0f172a;
-    /* text-slate-900 (inferred) */
+    color: var(--text-main);
 }
 
 .header-actions {
@@ -87,15 +80,12 @@
 }
 
 .btn-close {
-    background-color: #e2e8f0;
-    /* bg-slate-200 */
-    color: #334155;
-    /* text-slate-700 */
+    background-color: var(--input-bg);
+    color: var(--text-muted);
 }
 
 .btn-close:hover {
-    background-color: #cbd5e1;
-    /* hover:bg-slate-300 */
+    background-color: var(--hover-bg);
 }
 
 .invoice-print-area {
@@ -206,8 +196,7 @@
 }
 
 .invoice-detail-table thead tr {
-    background-color: #f8fafc;
-    /* bg-slate-50 */
+    background-color: var(--table-header-bg);
 }
 
 .invoice-detail-table th,
@@ -281,13 +270,9 @@
 
 .remarks-box {
     margin-top: 1.5rem;
-    /* mt-6 */
     padding: 1rem;
-    /* p-4 */
-    border: 2px solid #cbd5e1;
-    /* border-slate-300 */
+    border: 2px solid var(--border-color);
     border-radius: 0.25rem;
-    /* rounded */
 }
 
 .remarks-box p {

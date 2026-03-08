@@ -2,27 +2,21 @@
 
 .invoice-form-overlay {
     padding: 2rem;
-    /* p-8 */
-    background-color: #f8fafc;
-    /* bg-slate-50 */
+    background-color: var(--bg-color);
     min-height: 100vh;
 }
 
 .invoice-form-card {
-    background-color: #ffffff;
-    border: 1px solid #e2e8f0;
-    /* border-slate-200 */
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
     max-width: 64rem;
-    /* max-w-5xl */
     margin-left: auto;
     margin-right: auto;
 }
 
 .invoice-form-header {
     padding: 1.25rem 1.5rem;
-    /* px-6 py-5 */
-    border-bottom: 1px solid #e2e8f0;
-    /* border-slate-200 */
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -30,32 +24,25 @@
 
 .invoice-form-title h3 {
     font-size: 1.125rem;
-    /* text-lg */
-    color: #0f172a;
-    /* text-slate-900 */
+    color: var(--text-main);
     margin-bottom: 0.125rem;
-    /* mt-0.5 approx adjust */
     margin-top: 0;
 }
 
 .invoice-form-title p {
     font-size: 0.875rem;
-    /* text-sm */
-    color: #475569;
-    /* text-slate-600 */
+    color: var(--text-muted);
     margin: 0;
     margin-top: 0.125rem;
-    /* mt-0.5 */
 }
 
 .close-btn {
     padding: 0.5rem;
-    /* p-2 */
     background: none;
     border: none;
     cursor: pointer;
-    color: #334155;
-    /* text-slate-700 */
+    color: var(--text-muted);
+
     transition: background-color 0.2s;
     border-radius: 0.25rem;
     display: flex;
@@ -80,18 +67,12 @@
 
 .section-title {
     font-size: 0.75rem;
-    /* text-xs */
     text-transform: uppercase;
     letter-spacing: 0.025em;
-    /* tracking-wide */
-    color: #475569;
-    /* text-slate-600 */
+    color: var(--text-muted);
     margin-bottom: 1rem;
-    /* mb-4 */
     padding-bottom: 0.5rem;
-    /* pb-2 */
-    border-bottom: 1px solid #e2e8f0;
-    /* border-slate-200 */
+    border-bottom: 1px solid var(--border-color);
     margin-top: 0;
 }
 
@@ -129,11 +110,8 @@
 .form-label {
     display: block;
     font-size: 0.875rem;
-    /* text-sm */
-    color: #334155;
-    /* text-slate-700 */
+    color: var(--text-muted);
     margin-bottom: 0.5rem;
-    /* mb-2 */
 }
 
 .required {
@@ -146,12 +124,10 @@
 .form-textarea {
     width: 100%;
     padding: 0.625rem 0.75rem;
-    /* px-3 py-2.5 */
-    border: 1px solid #cbd5e1;
-    /* border-slate-300 */
-    background-color: #ffffff;
+    border: 1px solid var(--input-border);
+    background-color: var(--input-bg);
+    color: var(--text-main);
     font-size: 0.875rem;
-    /* text-sm */
     box-sizing: border-box;
 }
 
@@ -159,33 +135,26 @@
 .form-select:focus,
 .form-textarea:focus {
     outline: none;
-    box-shadow: 0 0 0 1px #0f172a;
-    /* ring-1 ring-slate-900 */
-    border-color: #0f172a;
+    box-shadow: 0 0 0 1px var(--text-main);
+    border-color: var(--text-main);
 }
 
 .input-readonly {
-    background-color: #f8fafc;
-    /* bg-slate-50 */
-    color: #0f172a;
-    /* text-slate-900 */
+    background-color: var(--hover-bg);
+    color: var(--text-main);
     cursor: not-allowed;
 }
 
 .invoice-summary-box {
-    background-color: #f8fafc;
-    /* bg-slate-50 */
-    border: 1px solid #e2e8f0;
-    /* border-slate-200 */
+    background-color: var(--hover-bg);
+    border: 1px solid var(--border-color);
     padding: 1.5rem;
-    /* p-6 */
 }
 
 .summary-title {
     font-size: 0.875rem;
-    /* text-sm */
-    color: #0f172a;
-    /* text-slate-900 */
+    color: var(--text-main);
+
     margin-bottom: 1rem;
     /* mb-4 */
     text-transform: uppercase;
@@ -203,22 +172,20 @@
 
 .summary-item-label {
     font-size: 0.75rem;
-    /* text-xs */
-    color: #475569;
-    /* text-slate-600 */
+    color: var(--text-muted);
     margin-bottom: 0.25rem;
-    /* mb-1 */
     margin-top: 0;
 }
 
 .summary-item-value {
     font-size: 1.5rem;
-    /* text-2xl */
+    color: var(--text-main);
     margin: 0;
+    font-weight: 600;
 }
 
 .text-slate-900 {
-    color: #0f172a;
+    color: var(--text-main);
 }
 
 .text-green-700 {
@@ -231,26 +198,20 @@
 
 .invoice-form-footer {
     padding: 1rem 1.5rem;
-    /* px-6 py-4 */
-    border-top: 1px solid #e2e8f0;
-    /* border-slate-200 */
-    background-color: #f8fafc;
-    /* bg-slate-50 */
+    border-top: 1px solid var(--border-color);
+    background-color: var(--hover-bg);
     display: flex;
     align-items: center;
     justify-content: flex-end;
     gap: 0.75rem;
-    /* gap-3 */
 }
 
 .cancel-btn {
     padding: 0.625rem 1.5rem;
-    /* px-6 py-2.5 */
-    border: 1px solid #cbd5e1;
-    /* border-slate-300 */
-    background-color: #ffffff;
-    color: #334155;
-    /* text-slate-700 */
+    border: 1px solid var(--border-color);
+    background-color: var(--input-bg);
+    color: var(--text-muted);
+
     cursor: pointer;
     transition: background-color 0.2s;
     font-size: 1rem;
@@ -263,10 +224,9 @@
 
 .submit-btn {
     padding: 0.625rem 1.5rem;
-    /* px-6 py-2.5 */
-    background-color: #0f172a;
-    /* bg-slate-900 */
-    color: #ffffff;
+    background-color: var(--text-main);
+    color: var(--card-bg);
+
     border: none;
     cursor: pointer;
     transition: background-color 0.2s;
@@ -276,4 +236,138 @@
 .submit-btn:hover {
     background-color: #1e293b;
     /* hover:bg-slate-800 */
+}
+
+/* =====================
+   Dynamic Items/Payments Table
+===================== */
+.section-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.section-header-row .section-title {
+    margin-bottom: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.add-row-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.9rem;
+    background-color: var(--text-main);
+    color: var(--card-bg);
+
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: background-color 0.15s;
+}
+
+.add-row-btn:hover {
+    background-color: #1e293b;
+}
+
+.delete-row-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.4rem;
+    background: none;
+    border: 1px solid #fca5a5;
+    border-radius: 4px;
+    color: #b91c1c;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.delete-row-btn:hover:not(:disabled) {
+    background-color: #fee2e2;
+}
+
+.delete-row-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.items-table-container {
+    overflow-x: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+.items-edit-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.items-edit-table th {
+    background-color: var(--table-header-bg);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
+    font-weight: 600;
+}
+
+.items-edit-table td {
+    padding: 0.4rem 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.items-edit-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.items-edit-table .form-input-i,
+.items-edit-table .form-select-i {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.85rem;
+}
+
+.form-textarea-1 {
+    resize: vertical;
+}
+
+/* WhatsApp Share Toggle */
+.invoice-form-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.share-whatsapp-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: #16a34a;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.share-whatsapp-label input {
+    width: 1rem;
+    height: 1rem;
+    cursor: pointer;
+}
+
+.wa-icon {
+    color: #25d366;
+}
+
+.footer-btns {
+    display: flex;
+    gap: 0.75rem;
 }

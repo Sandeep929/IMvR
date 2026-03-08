@@ -1,8 +1,8 @@
 import React from 'react';
-import { Bell, Search, User, LogOut } from 'lucide-react';
+import { Bell, Search, User, LogOut, Sun, Moon } from 'lucide-react';
 import './header.css';
 
-export function Header({ title, onLogout }) {
+export function Header({ title, onLogout, theme, toggleTheme }) {
     const username = localStorage.getItem('username') || 'Admin';
 
     return (
@@ -21,6 +21,14 @@ export function Header({ title, onLogout }) {
                 </div>
 
                 <div className="header-actions">
+                    <button
+                        onClick={toggleTheme}
+                        className="theme-toggle-btn"
+                        title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+                    >
+                        {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+                    </button>
+
                     {/* <div className="search-wrapper">
                         <Search className="search-icon" size={18} />
                         <input

@@ -43,20 +43,38 @@ CREATE TABLE IF NOT EXISTS invoices (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   uuid TEXT UNIQUE NOT NULL,
   pavatiNo TEXT NOT NULL UNIQUE,
+  orderNo TEXT,
   date TEXT NOT NULL,
   customerName TEXT NOT NULL,
   site TEXT,
   vehicleNo TEXT,
-  product TEXT NOT NULL,
-  quantity REAL NOT NULL,
-  rate REAL NOT NULL,
-  amount REAL NOT NULL,
-  advance REAL,
-  balance REAL,
+  totalAmount REAL NOT NULL DEFAULT 0,
+  totalAdvance REAL NOT NULL DEFAULT 0,
+  balance REAL NOT NULL DEFAULT 0,
   marfat TEXT,
   remarks TEXT,
   createdAt TEXT,
   synced INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS invoice_items (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  invoiceUuid TEXT NOT NULL,
+  product TEXT NOT NULL,
+  quantity REAL NOT NULL,
+  rate REAL NOT NULL,
+  amount REAL NOT NULL,
+  FOREIGN KEY (invoiceUuid) REFERENCES invoices (uuid) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS invoice_payments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  invoiceUuid TEXT NOT NULL,
+  date TEXT NOT NULL,
+  amount REAL NOT NULL,
+  method TEXT,
+  remarks TEXT,
+  FOREIGN KEY (invoiceUuid) REFERENCES invoices (uuid) ON DELETE CASCADE
 );
 
 `);

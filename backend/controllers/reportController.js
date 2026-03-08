@@ -5,13 +5,20 @@ export const getReportData = (req, res) => {
   try {
 
     /* ===============================
-       Fetch invoices from SQLite
+       Fetch invoices + items from SQLite
     =============================== */
 
     const invoices = db.prepare(`
       SELECT * FROM invoices
       ORDER BY date DESC
     `).all();
+
+    // Attach items and payments to each invoice
+    const fullInvoices = invoices.map(inv => {
+      const items = db.prepare('SELECT * FROM invoice_items WHERE invoiceUuid = ?').all(inv.uuid);
+      const payments = db.prepare('SELECT * FROM invoice_payments WHERE invoiceUuid = ?').all(inv.uuid);
+      return { ...inv, items, payments };
+    });
 
 
     /* ===============================
@@ -20,7 +27,7 @@ export const getReportData = (req, res) => {
 
     const monthlyData = {};
 
-    invoices.forEach(inv => {
+    fullInvoices.forEach(inv => {
       const date = new Date(inv.date);
 
       const key =
@@ -34,7 +41,7 @@ export const getReportData = (req, res) => {
         };
       }
 
-      monthlyData[key].revenue += inv.amount || 0;
+      monthlyData[key].revenue += inv.totalAmount || 0;
       monthlyData[key].invoiceCount += 1;
     });
 
@@ -48,7 +55,7 @@ export const getReportData = (req, res) => {
 
     const customerData = {};
 
-    invoices.forEach(inv => {
+    fullInvoices.forEach(inv => {
       const name = inv.customerName;
 
       if (!customerData[name]) {
@@ -60,7 +67,7 @@ export const getReportData = (req, res) => {
         };
       }
 
-      customerData[name].totalAmount += inv.amount || 0;
+      customerData[name].totalAmount += inv.totalAmount || 0;
       customerData[name].totalBalance += inv.balance || 0;
       customerData[name].invoiceCount += 1;
     });
@@ -70,26 +77,28 @@ export const getReportData = (req, res) => {
 
 
     /* ===============================
-       Product-wise breakdown
+       Product-wise breakdown (from invoice_items)
     =============================== */
 
     const productData = {};
 
-    invoices.forEach(inv => {
-      const product = inv.product;
+    fullInvoices.forEach(inv => {
+      (inv.items || []).forEach(item => {
+        const product = item.product;
 
-      if (!productData[product]) {
-        productData[product] = {
-          name: product,
-          totalQuantity: 0,
-          totalAmount: 0,
-          invoiceCount: 0
-        };
-      }
+        if (!productData[product]) {
+          productData[product] = {
+            name: product,
+            totalQuantity: 0,
+            totalAmount: 0,
+            invoiceCount: 0
+          };
+        }
 
-      productData[product].totalQuantity += inv.quantity || 0;
-      productData[product].totalAmount += inv.amount || 0;
-      productData[product].invoiceCount += 1;
+        productData[product].totalQuantity += item.quantity || 0;
+        productData[product].totalAmount += item.amount || 0;
+        productData[product].invoiceCount += 1;
+      });
     });
 
     const productReport = Object.values(productData)
@@ -100,16 +109,16 @@ export const getReportData = (req, res) => {
        Overall summary
     =============================== */
 
-    const totalRevenue = invoices.reduce(
-      (sum, inv) => sum + (inv.amount || 0), 0
+    const totalRevenue = fullInvoices.reduce(
+      (sum, inv) => sum + (inv.totalAmount || 0), 0
     );
 
-    const totalBalance = invoices.reduce(
+    const totalBalance = fullInvoices.reduce(
       (sum, inv) => sum + (inv.balance || 0), 0
     );
 
-    const totalCollected = invoices.reduce(
-      (sum, inv) => sum + (inv.advance || 0), 0
+    const totalCollected = fullInvoices.reduce(
+      (sum, inv) => sum + (inv.totalAdvance || 0), 0
     );
 
 
@@ -125,7 +134,7 @@ export const getReportData = (req, res) => {
         totalRevenue,
         totalBalance,
         totalCollected,
-        totalInvoices: invoices.length
+        totalInvoices: fullInvoices.length
       }
     });
 

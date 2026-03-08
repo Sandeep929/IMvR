@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Package, TrendingUp, DollarSign, X, AlertTriangle, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Package, TrendingUp, IndianRupee, X, AlertTriangle, Loader2 } from 'lucide-react';
 import { productAPI } from '@/services/api';
 import './products.css';
 export function Products() {
@@ -118,8 +118,8 @@ export function Products() {
 
                     <div className="stat-card">
                         <div className="stat-card-content">
-                            <div className="stat-icon-box bg-blue-600">
-                                <DollarSign size={20} className="stat-icon" />
+                            <div className="stat-icon-box bg-slate-900-custom">
+                                <IndianRupee size={20} className="stat-icon" />
                             </div>
                             <div>
                                 <p className="stat-label">Available Items</p>
@@ -130,7 +130,7 @@ export function Products() {
 
                     <div className="stat-card">
                         <div className="stat-card-content">
-                            <div className="stat-icon-box bg-green-600">
+                            <div className="stat-icon-box bg-slate-900-custom">
                                 <TrendingUp size={20} className="stat-icon" />
                             </div>
                             <div>
@@ -142,7 +142,7 @@ export function Products() {
 
                     <div className="stat-card">
                         <div className="stat-card-content">
-                            <div className="stat-icon-box bg-red-600">
+                            <div className="stat-icon-box bg-red-400">
                                 <AlertTriangle size={20} className="stat-icon" />
                             </div>
                             <div>

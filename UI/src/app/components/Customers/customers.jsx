@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Phone, MapPin, FileText, DollarSign, TrendingUp, User, X, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Plus, Edit, Trash2, Phone, MapPin, FileText, IndianRupee, TrendingUp, User, X, Loader2, Download, Filter, AlertCircle } from 'lucide-react';
 import { customerAPI, invoiceAPI } from '@/services/api';
 import './customers.css';
 
@@ -11,6 +11,10 @@ export function Customers() {
     const [showForm, setShowForm] = useState(false);
     const [editingCustomer, setEditingCustomer] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [dueFilter, setDueFilter] = useState('all'); // 'all' | 'due' | 'paid'
+    const [showDownload, setShowDownload] = useState(false);
+    const [downloadFrom, setDownloadFrom] = useState('');
+    const [downloadTo, setDownloadTo] = useState('');
 
     useEffect(() => {
         loadCustomerData();
@@ -39,20 +43,72 @@ export function Customers() {
         return {
             ...customer,
             totalInvoices: customerInvoices.length,
-            totalAmount: customerInvoices.reduce((sum, inv) => sum + (inv.amount || 0), 0),
-            totalPaid: customerInvoices.reduce((sum, inv) => sum + (inv.advance || 0), 0),
+            totalAmount: customerInvoices.reduce((sum, inv) => sum + (inv.totalAmount || 0), 0),
+            totalPaid: customerInvoices.reduce((sum, inv) => sum + (inv.totalAdvance || 0), 0),
             balance: customerInvoices.reduce((sum, inv) => sum + (inv.balance || 0), 0),
+            products: [...new Set(customerInvoices.flatMap(inv => (inv.items || []).map(i => i.product)))],
             lastInvoiceDate: customerInvoices.length > 0
                 ? customerInvoices.sort((a, b) => new Date(b.date) - new Date(a.date))[0].date
                 : null
         };
     });
 
-    const filteredCustomers = enrichedCustomers.filter(customer =>
-        (customer.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (customer.phone || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (customer.address || '').toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredCustomers = enrichedCustomers.filter(customer => {
+        const matchesSearch =
+            (customer.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (customer.phone || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (customer.address || '').toLowerCase().includes(searchTerm.toLowerCase());
+
+        const matchesDue =
+            dueFilter === 'all' ||
+            (dueFilter === 'due' && customer.balance > 0) ||
+            (dueFilter === 'paid' && customer.balance <= 0);
+
+        return matchesSearch && matchesDue;
+    });
+
+    // ── Master Record CSV Download ──────────────────────────────────
+    const handleDownloadMasterRecord = () => {
+        let dataToExport = enrichedCustomers;
+
+        // Apply date range filter on lastInvoiceDate if set
+        if (downloadFrom || downloadTo) {
+            const from = downloadFrom ? new Date(downloadFrom) : new Date('2000-01-01');
+            const to = downloadTo ? new Date(downloadTo + 'T23:59:59') : new Date();
+            dataToExport = enrichedCustomers.filter(c => {
+                if (!c.lastInvoiceDate) return false;
+                const d = new Date(c.lastInvoiceDate);
+                return d >= from && d <= to;
+            });
+        }
+
+        const headers = ['Name', 'Phone', 'Email', 'Address', 'Total Invoices', 'Products Ordered', 'Total Amount (₹)', 'Total Paid (₹)', 'Balance Due (₹)', 'Last Invoice Date'];
+        const rows = dataToExport.map(c => [
+            `"${c.name || ''}"`,
+            `"${c.phone || ''}"`,
+            `"${c.email || ''}"`,
+            `"${(c.address || '').replace(/"/g, '""')}"`,
+            c.totalInvoices,
+            `"${(c.products || []).join(', ')}"`,
+            c.totalAmount,
+            c.totalPaid,
+            c.balance,
+            c.lastInvoiceDate ? new Date(c.lastInvoiceDate).toLocaleDateString('en-IN') : 'N/A'
+        ]);
+
+        const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const dateLabel = downloadFrom && downloadTo
+            ? `_${downloadFrom}_to_${downloadTo}`
+            : downloadFrom ? `_from_${downloadFrom}` : downloadTo ? `_to_${downloadTo}` : '';
+        link.href = url;
+        link.download = `master_record${dateLabel}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
+        setShowDownload(false);
+    };
 
     const stats = {
         total: enrichedCustomers.length,
@@ -77,7 +133,7 @@ export function Customers() {
         if (confirm('Are you sure you want to delete this customer?')) {
             try {
                 await customerAPI.delete(id);
-                setCustomers(customers.filter(c => c._id !== id));
+                setCustomers(customers.filter(c => c.id !== id && c._id !== id));
             } catch (err) {
                 alert('Error deleting customer: ' + err.message);
             }
@@ -87,11 +143,12 @@ export function Customers() {
     const handleSave = async (formData) => {
         try {
             if (editingCustomer) {
-                const res = await customerAPI.update(editingCustomer._id, formData);
-                setCustomers(customers.map(c => c._id === editingCustomer._id ? res.data : c));
+                const id = editingCustomer.id || editingCustomer._id;
+                await customerAPI.update(id, formData);
+                await loadCustomerData();
             } else {
-                const res = await customerAPI.create(formData);
-                setCustomers([res.data, ...customers]);
+                await customerAPI.create(formData);
+                await loadCustomerData();
             }
             setShowForm(false);
             setEditingCustomer(null);
@@ -133,7 +190,7 @@ export function Customers() {
 
                     <div className="stat-card">
                         <div className="stat-card-content">
-                            <div className="stat-icon-box bg-green-600">
+                            <div className="stat-icon-box bg-slate-900-custom">
                                 <TrendingUp size={20} className="stat-icon" />
                             </div>
                             <div>
@@ -145,8 +202,8 @@ export function Customers() {
 
                     <div className="stat-card">
                         <div className="stat-card-content">
-                            <div className="stat-icon-box bg-blue-600">
-                                <DollarSign size={20} className="stat-icon" />
+                            <div className="stat-icon-box bg-slate-900-custom">
+                                <IndianRupee size={20} className="stat-icon" />
                             </div>
                             <div>
                                 <p className="stat-label">Total Revenue</p>
@@ -155,14 +212,14 @@ export function Customers() {
                         </div>
                     </div>
 
-                    <div className="stat-card">
+                    <div className="stat-card stat-card-red">
                         <div className="stat-card-content">
-                            <div className="stat-icon-box bg-slate-100">
-                                <DollarSign size={20} className="text-slate-700" />
+                            <div className="stat-icon-box bg-slate-900-custom">
+                                <AlertCircle size={20} className="stat-icon" />
                             </div>
                             <div>
-                                <p className="stat-label">Avg per Customer</p>
-                                <p className="stat-value">₹ {Math.round(stats.avgRevenue).toLocaleString()}</p>
+                                <p className="stat-label">Outstanding Balance</p>
+                                <p className="stat-value red">₹ {enrichedCustomers.reduce((s, c) => s + c.balance, 0).toLocaleString()}</p>
                             </div>
                         </div>
                     </div>
@@ -170,31 +227,92 @@ export function Customers() {
             </div>
 
             <div className="customers-content">
+                {/* Content Header */}
                 <div className="content-header">
                     <div className="content-title">
                         <h3>Customer Management</h3>
                         <p>Manage all customer records and transactions</p>
                     </div>
-                    <button
-                        onClick={handleAdd}
-                        className="add-btn"
-                    >
-                        <Plus size={18} />
-                        Add Customer
-                    </button>
+                    <div className="header-actions-row">
+                        {/* Download Master Record */}
+                        <div className="download-panel-wrapper">
+                            <button
+                                onClick={() => setShowDownload(v => !v)}
+                                className="master-dl-btn"
+                            >
+                                <Download size={16} />
+                                Master Record
+                            </button>
+                            {showDownload && (
+                                <div className="download-panel">
+                                    <p className="dl-panel-title">Select Date Range</p>
+                                    <div className="dl-date-row">
+                                        <div>
+                                            <label className="dl-label">From</label>
+                                            <input
+                                                type="date"
+                                                value={downloadFrom}
+                                                onChange={e => setDownloadFrom(e.target.value)}
+                                                className="dl-date-input"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="dl-label">To</label>
+                                            <input
+                                                type="date"
+                                                value={downloadTo}
+                                                onChange={e => setDownloadTo(e.target.value)}
+                                                className="dl-date-input"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="dl-actions">
+                                        <button className="dl-cancel" onClick={() => setShowDownload(false)}>Cancel</button>
+                                        <button className="dl-confirm" onClick={handleDownloadMasterRecord}>
+                                            <Download size={14} /> Download CSV
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        <button onClick={handleAdd} className="add-btn">
+                            <Plus size={18} />
+                            Add Customer
+                        </button>
+                    </div>
                 </div>
 
+                {/* Search + Due Filter Bar */}
                 <div className="search-section">
-                    <div className="search-container">
-                        <User size={18} className="search-icon" />
-                        <input
-                            type="text"
-                            placeholder="Search by name, phone, or address..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="search-input"
-                        />
+                    <div className="search-filter-row">
+                        <div className="search-container" style={{ flex: 1 }}>
+                            <User size={18} className="search-icon" />
+                            <input
+                                type="text"
+                                placeholder="Search by name, phone, or address..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="search-input"
+                            />
+                        </div>
+                        <div className="due-filter-group">
+                            <Filter size={15} style={{ color: '#94a3b8' }} />
+                            {['all', 'due', 'paid'].map(opt => (
+                                <button
+                                    key={opt}
+                                    onClick={() => setDueFilter(opt)}
+                                    className={`due-filter-btn ${dueFilter === opt ? 'due-filter-active-' + opt : ''}`}
+                                >
+                                    {opt === 'all' ? 'All' : opt === 'due' ? '🔴 Has Due' : '🟢 Fully Paid'}
+                                </button>
+                            ))}
+                        </div>
                     </div>
+                    {dueFilter === 'due' && (
+                        <p className="due-filter-hint">
+                            Showing <strong>{filteredCustomers.length}</strong> customers with outstanding balance
+                        </p>
+                    )}
                 </div>
 
                 <div className="table-container">
@@ -205,6 +323,7 @@ export function Customers() {
                                 <th>Contact</th>
                                 <th>Address</th>
                                 <th className="text-center">Invoices</th>
+                                <th>Products Ordered</th>
                                 <th className="text-right">Total Amount</th>
                                 <th className="text-right">Paid</th>
                                 <th className="text-right">Balance</th>
@@ -247,6 +366,16 @@ export function Customers() {
                                             {customer.totalInvoices}
                                         </span>
                                     </td>
+                                    <td>
+                                        <div className="products-cell">
+                                            {(customer.products || []).length > 0
+                                                ? (customer.products || []).map((p, pi) => (
+                                                    <span key={pi} className="product-tag">{p}</span>
+                                                ))
+                                                : <span className="no-data">—</span>
+                                            }
+                                        </div>
+                                    </td>
                                     <td className="text-right amount-text">
                                         ₹ {customer.totalAmount.toLocaleString()}
                                     </td>
@@ -280,7 +409,7 @@ export function Customers() {
                                                 <Edit size={16} />
                                             </button>
                                             <button
-                                                onClick={() => handleDelete(customer._id)}
+                                                onClick={() => handleDelete(customer.id || customer._id)}
                                                 className="action-btn action-btn-delete"
                                                 title="Delete"
                                             >

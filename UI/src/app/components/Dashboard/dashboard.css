@@ -2,10 +2,9 @@
 
 .dashboard-container {
     padding: 2rem;
-    /* p-8 */
-    background-color: #f8fafc;
-    /* bg-slate-50 */
+    background-color: var(--bg-color);
     min-height: 100vh;
+    transition: background-color 0.3s ease;
 }
 
 .dashboard-content {
@@ -38,12 +37,10 @@
 }
 
 .stat-card {
-    background-color: #ffffff;
-    border: 1px solid #e2e8f0;
-    /* border-slate-200 */
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
     padding: 1.5rem;
-    /* p-6 */
-    transition: box-shadow 0.2s;
+    transition: all 0.2s ease;
 }
 
 .stat-card:hover {
@@ -93,32 +90,23 @@
 
 .stat-title {
     font-size: 0.875rem;
-    /* text-sm */
-    color: #475569;
-    /* text-slate-600 */
+    color: var(--text-muted);
     margin-bottom: 0.25rem;
-    /* mb-1 */
     text-transform: uppercase;
     letter-spacing: 0.025em;
-    /* tracking-wide */
     margin-top: 0;
 }
 
 .stat-value {
     font-size: 1.5rem;
-    /* text-2xl */
-    color: #0f172a;
-    /* text-slate-900 */
+    color: var(--text-main);
     margin-bottom: 0.25rem;
-    /* mb-1 */
     margin-top: 0;
 }
 
 .stat-change-label {
     font-size: 0.75rem;
-    /* text-xs */
-    color: #64748b;
-    /* text-slate-500 */
+    color: var(--text-muted);
     margin: 0;
 }
 
@@ -139,11 +127,9 @@
 }
 
 .secondary-card {
-    background-color: #ffffff;
-    border: 1px solid #e2e8f0;
-    /* border-slate-200 */
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
     padding: 1.5rem;
-    /* p-6 */
 }
 
 .secondary-card-content {
@@ -157,45 +143,34 @@
 
 .secondary-icon-box {
     width: 2.5rem;
-    /* w-10 */
     height: 2.5rem;
-    /* h-10 */
-    background-color: #f1f5f9;
-    /* bg-slate-100 */
+    background-color: var(--hover-bg);
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .secondary-icon {
-    color: #334155;
-    /* text-slate-700 */
+    color: var(--text-main);
 }
 
 .secondary-title {
     font-size: 0.875rem;
-    /* text-sm */
-    color: #475569;
-    /* text-slate-600 */
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.025em;
-    /* tracking-wide */
     margin: 0;
 }
 
 .secondary-value {
     font-size: 1.5rem;
-    /* text-2xl */
-    color: #0f172a;
-    /* text-slate-900 */
+    color: var(--text-main);
     margin: 0;
 }
 
 .secondary-footer {
     font-size: 0.75rem;
-    /* text-xs */
-    color: #64748b;
-    /* text-slate-500 */
+    color: var(--text-muted);
     margin: 0;
 }
 
@@ -214,9 +189,8 @@
 }
 
 .table-card {
-    background-color: #ffffff;
-    border: 1px solid #e2e8f0;
-    /* border-slate-200 */
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
 }
 
 .table-header {
@@ -231,20 +205,15 @@
 
 .table-title {
     font-size: 0.875rem;
-    /* text-sm */
     text-transform: uppercase;
     letter-spacing: 0.025em;
-    /* tracking-wide */
-    color: #0f172a;
-    /* text-slate-900 */
+    color: var(--text-main);
     margin: 0;
 }
 
 .view-all-btn {
     font-size: 0.875rem;
-    /* text-sm */
-    color: #334155;
-    /* text-slate-700 */
+    color: var(--text-main);
     text-decoration: underline;
     background: none;
     border: none;
@@ -264,9 +233,7 @@
 
 .table-item {
     padding: 1rem 1.5rem;
-    /* px-6 py-4 */
-    border-bottom: 1px solid #e2e8f0;
-    /* divide-slate-200 */
+    border-bottom: 1px solid var(--border-color);
     transition: background-color 0.2s;
 }
 
@@ -275,8 +242,7 @@
 }
 
 .table-item:hover {
-    background-color: #f8fafc;
-    /* bg-slate-50 */
+    background-color: var(--hover-bg);
 }
 
 .invoice-row {
@@ -289,17 +255,14 @@
 
 .invoice-customer {
     font-size: 0.875rem;
-    /* text-sm */
-    color: #0f172a;
-    /* text-slate-900 */
+    color: var(--text-main);
     margin: 0;
+    font-weight: 500;
 }
 
 .invoice-number {
     font-size: 0.75rem;
-    /* text-xs */
-    color: #64748b;
-    /* text-slate-500 */
+    color: var(--text-muted);
     margin: 0;
 }
 
@@ -309,17 +272,14 @@
 
 .invoice-amount {
     font-size: 0.875rem;
-    /* text-sm */
-    color: #0f172a;
-    /* text-slate-900 */
+    color: var(--text-main);
     margin: 0;
+    font-weight: 600;
 }
 
 .invoice-date {
     font-size: 0.75rem;
-    /* text-xs */
-    color: #64748b;
-    /* text-slate-500 */
+    color: var(--text-muted);
     margin: 0;
 }
 
@@ -332,8 +292,7 @@
 }
 
 .invoice-units {
-    color: #475569;
-    /* text-slate-600 */
+    color: var(--text-muted);
 }
 
 .status-badge {
@@ -375,43 +334,34 @@
 
 .customer-rank {
     width: 2rem;
-    /* w-8 */
     height: 2rem;
-    /* h-8 */
-    background-color: #0f172a;
-    /* bg-slate-900 */
-    color: #ffffff;
+    background-color: var(--text-main);
+    color: var(--card-bg);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 0.75rem;
-    /* text-xs */
     flex-shrink: 0;
 }
 
 .customer-name {
     font-size: 0.875rem;
-    /* text-sm */
-    color: #0f172a;
-    /* text-slate-900 */
+    color: var(--text-main);
     margin: 0;
 }
 
 .customer-count {
     font-size: 0.75rem;
-    /* text-xs */
-    color: #64748b;
-    /* text-slate-500 */
+    color: var(--text-muted);
     margin: 0;
 }
 
 .customer-amount {
     font-size: 0.875rem;
-    /* text-sm */
-    color: #0f172a;
-    /* text-slate-900 */
+    color: var(--text-main);
     text-align: right;
     margin: 0;
+    font-weight: 600;
 }
 
 /* Payment Status Overview */
@@ -427,14 +377,10 @@
 
 .overview-title {
     font-size: 0.875rem;
-    /* text-sm */
     text-transform: uppercase;
     letter-spacing: 0.025em;
-    /* tracking-wide */
-    color: #0f172a;
-    /* text-slate-900 */
+    color: var(--text-main);
     margin-bottom: 1rem;
-    /* mb-4 */
     margin-top: 0;
 }
 
@@ -447,24 +393,17 @@
 
 .overview-card-title {
     font-size: 0.75rem;
-    /* text-xs */
-    color: #475569;
-    /* text-slate-600 */
+    color: var(--text-muted);
     margin-bottom: 0.25rem;
-    /* mb-1 */
     text-transform: uppercase;
     letter-spacing: 0.025em;
-    /* tracking-wide */
     margin-top: 0;
 }
 
 .overview-card-value {
     font-size: 1.875rem;
-    /* text-3xl */
-    color: #0f172a;
-    /* text-slate-900 */
+    color: var(--text-main);
     margin-bottom: 0.25rem;
-    /* mb-1 */
     margin-top: 0;
 }
 
@@ -487,17 +426,13 @@
 
 .overview-helper-text {
     font-size: 0.75rem;
-    /* text-xs */
-    color: #64748b;
-    /* text-slate-500 */
+    color: var(--text-muted);
     margin-top: 0.5rem;
-    /* mt-2 */
     margin-bottom: 0;
 }
 
-/* Helper Utilities for Colors */
 .bg-slate-900-custom {
-    background-color: #0f172a;
+    background-color: var(--sidebar-bg);
 }
 
 .bg-green-600-custom {

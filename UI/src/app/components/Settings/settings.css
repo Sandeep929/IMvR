@@ -2,10 +2,9 @@
 
 .settings-container {
     padding: 2rem;
-    /* p-8 */
-    background-color: #f8fafc;
-    /* bg-slate-50 */
+    background-color: var(--bg-color);
     min-height: 100vh;
+    transition: background-color 0.3s ease;
 }
 
 .settings-header {
@@ -15,19 +14,14 @@
 
 .settings-title {
     font-size: 1.125rem;
-    /* text-lg */
-    color: #0f172a;
-    /* text-slate-900 */
+    color: var(--text-main);
     margin-bottom: 0.25rem;
-    /* mb-1 */
     margin-top: 0;
 }
 
 .settings-subtitle {
     font-size: 0.875rem;
-    /* text-sm */
-    color: #475569;
-    /* text-slate-600 */
+    color: var(--text-muted);
     margin: 0;
 }
 
@@ -50,26 +44,20 @@
 }
 
 .sidebar-card {
-    background-color: #ffffff;
-    border: 1px solid #e2e8f0;
-    /* border-slate-200 */
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
 }
 
 .sidebar-header {
     padding: 1rem;
-    /* p-4 */
-    border-bottom: 1px solid #e2e8f0;
-    /* border-slate-200 */
+    border-bottom: 1px solid var(--border-color);
 }
 
 .sidebar-title {
     font-size: 0.75rem;
-    /* text-xs */
-    color: #475569;
-    /* text-slate-600 */
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.025em;
-    /* tracking-wide */
     margin: 0;
 }
 
@@ -95,20 +83,17 @@
 }
 
 .nav-item.active {
-    background-color: #0f172a;
-    /* bg-slate-900 */
-    color: #ffffff;
+    background-color: var(--text-main);
+    color: var(--card-bg);
 }
 
 .nav-item.inactive {
     background-color: transparent;
-    color: #334155;
-    /* text-slate-700 */
+    color: var(--text-muted);
 }
 
 .nav-item.inactive:hover {
-    background-color: #f8fafc;
-    /* hover:bg-slate-50 */
+    background-color: var(--hover-bg);
 }
 
 /* Content Area */
@@ -123,33 +108,25 @@
 }
 
 .content-card {
-    background-color: #ffffff;
-    border: 1px solid #e2e8f0;
-    /* border-slate-200 */
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
 }
 
 .content-header {
     padding: 1.25rem 1.5rem;
-    /* px-6 py-5 */
-    border-bottom: 1px solid #e2e8f0;
-    /* border-slate-200 */
+    border-bottom: 1px solid var(--border-color);
 }
 
 .content-title {
     font-size: 1rem;
-    /* text-base */
-    color: #0f172a;
-    /* text-slate-900 */
+    color: var(--text-main);
     margin: 0;
 }
 
 .content-subtitle {
     font-size: 0.875rem;
-    /* text-sm */
-    color: #475569;
-    /* text-slate-600 */
+    color: var(--text-muted);
     margin-top: 0.25rem;
-    /* mt-1 */
     margin-bottom: 0;
 }
 
@@ -185,11 +162,8 @@
 .form-label {
     display: block;
     font-size: 0.875rem;
-    /* text-sm */
-    color: #334155;
-    /* text-slate-700 */
+    color: var(--text-muted);
     margin-bottom: 0.5rem;
-    /* mb-2 */
 }
 
 .required-star {
@@ -202,12 +176,10 @@
 .settings-select {
     width: 100%;
     padding: 0.625rem 0.75rem;
-    /* px-3 py-2.5 */
-    border: 1px solid #cbd5e1;
-    /* border-slate-300 */
-    background-color: #ffffff;
+    border: 1px solid var(--input-border);
+    background-color: var(--input-bg);
+    color: var(--text-main);
     font-size: 0.875rem;
-    /* text-sm */
     box-sizing: border-box;
 }
 
@@ -215,36 +187,27 @@
 .settings-textarea:focus,
 .settings-select:focus {
     outline: none;
-    box-shadow: 0 0 0 1px #0f172a;
-    /* ring-1 ring-slate-900 */
-    border-color: #0f172a;
+    box-shadow: 0 0 0 1px var(--text-main);
+    border-color: var(--text-main);
 }
 
 .password-section {
     padding-top: 1.5rem;
-    /* pt-6 */
-    border-top: 1px solid #e2e8f0;
-    /* border-slate-200 */
+    border-top: 1px solid var(--border-color);
 }
 
 .password-section-title {
     font-size: 0.875rem;
-    /* text-sm */
-    color: #0f172a;
-    /* text-slate-900 */
+    color: var(--text-main);
     margin-bottom: 1rem;
-    /* mb-4 */
     margin-top: 0;
     font-weight: 500;
 }
 
 .settings-form-footer {
     padding: 1rem 1.5rem;
-    /* px-6 py-4 */
-    border-top: 1px solid #e2e8f0;
-    /* border-slate-200 */
-    background-color: #f8fafc;
-    /* bg-slate-50 */
+    border-top: 1px solid var(--border-color);
+    background-color: var(--hover-bg);
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -252,23 +215,19 @@
 
 .save-btn {
     padding: 0.625rem 1.5rem;
-    /* px-6 py-2.5 */
-    background-color: #0f172a;
-    /* bg-slate-900 */
-    color: #ffffff;
+    background-color: var(--text-main);
+    color: var(--card-bg);
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    /* gap-2 */
     transition: background-color 0.2s;
     font-size: 0.875rem;
 }
 
 .save-btn:hover {
-    background-color: #1e293b;
-    /* hover:bg-slate-800 */
+    background-color: var(--text-muted);
 }
 
 /* Notification Items */
@@ -277,9 +236,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 1rem;
-    /* p-4 */
-    border: 1px solid #e2e8f0;
-    /* border-slate-200 */
+    border: 1px solid var(--border-color);
 }
 
 .notification-text p {
@@ -288,18 +245,13 @@
 
 .notification-title {
     font-size: 0.875rem;
-    /* text-sm */
-    color: #0f172a;
-    /* text-slate-900 */
+    color: var(--text-main);
     margin-bottom: 0.25rem;
-    /* mb-1 */
 }
 
 .notification-desc {
     font-size: 0.75rem;
-    /* text-xs */
-    color: #475569;
-    /* text-slate-600 */
+    color: var(--text-muted);
 }
 
 /* Toggle Switch */
@@ -335,30 +287,24 @@
 }
 
 .toggle-input:checked+.toggle-bg {
-    background-color: #0f172a;
-    /* peer-checked:bg-slate-900 */
+    background-color: var(--text-main);
 }
 
 .toggle-dot {
     position: absolute;
     top: 2px;
     left: 2px;
-    background-color: #ffffff;
-    border: 1px solid #cbd5e1;
-    /* border-slate-300 */
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
     height: 1.25rem;
-    /* h-5 */
     width: 1.25rem;
-    /* w-5 */
     border-radius: 50%;
     transition: transform 0.2s;
 }
 
 .toggle-input:checked+.toggle-bg .toggle-dot {
-    transform: translateX(100%);
-    /* translate-x-full approx (w-11 - w-5 - 4px = ~20px? actually 100% of w-5 is not enough, needs to translate by 1.25rem) */
     transform: translateX(1.25rem);
-    border-color: #ffffff;
+    border-color: var(--bg-color);
 }
 
 .notifications-spacing {

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Eye, Edit, Trash2, Download, Search, Filter, FileText, Loader2, CirclePlus } from 'lucide-react';
-import { invoiceAPI } from '@/services/api';
+import { Plus, Eye, Edit, Trash2, Download, Search, Filter, FileText, Loader2, CirclePlus, MessageCircle } from 'lucide-react';
+import { invoiceAPI, customerAPI } from '@/services/api';
 import { InvoiceForm } from '../InvoiceForm/invoiceForm';
 import { InvoiceDetailView } from '../InvoiceDetailView/invoiceDetailView';
+import { shareInvoiceOnWhatsApp } from '../../../utils/whatsapp';
 import './invoicesList.css';
 
 export function InvoicesList() {
     const [invoices, setInvoices] = useState([]);
+    const [customers, setCustomers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showForm, setShowForm] = useState(false);
@@ -15,6 +17,7 @@ export function InvoicesList() {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterProduct, setFilterProduct] = useState('all');
     const [filterStatus, setFilterStatus] = useState('all');
+    const [filterTime, setFilterTime] = useState('all'); // 'all' | 'today' | 'week' | 'month'
 
     useEffect(() => {
         loadInvoices();
@@ -23,8 +26,12 @@ export function InvoicesList() {
     const loadInvoices = async () => {
         try {
             setLoading(true);
-            const res = await invoiceAPI.getAll();
-            setInvoices(res.data);
+            const [invRes, custRes] = await Promise.all([
+                invoiceAPI.getAll(),
+                customerAPI.getAll()
+            ]);
+            setInvoices(invRes.data);
+            setCustomers(custRes.data);
         } catch (err) {
             setError(err.message);
             console.error('Error fetching invoices:', err);
@@ -47,7 +54,7 @@ export function InvoicesList() {
         if (confirm('Are you sure you want to delete this invoice?')) {
             try {
                 await invoiceAPI.delete(id);
-                setInvoices(invoices.filter(inv => inv._id !== id));
+                setInvoices(invoices.filter(inv => inv.id !== id));
             } catch (err) {
                 alert('Error deleting invoice: ' + err.message);
             }
@@ -59,24 +66,67 @@ export function InvoicesList() {
     };
 
     const handleSave = async (invoiceData) => {
-    try {
+        try {
+            if (editingInvoice) {
+                await invoiceAPI.update(editingInvoice.id, invoiceData);
+            } else {
+                await invoiceAPI.create(invoiceData);
+            }
+            await loadInvoices();
+            setShowForm(false);
+            setEditingInvoice(null);
+        } catch (err) {
+            alert('Error saving invoice: ' + err.message);
+        }
+    };
 
-        if (editingInvoice) {
-            await invoiceAPI.update(editingInvoice.id, invoiceData);
+    const handleWhatsAppShare = (invoice) => {
+        const customer = customers.find(c => c.name === invoice.customerName);
+        if (customer && (customer.phone || customer.mobile)) {
+            shareInvoiceOnWhatsApp(invoice, customer.phone || customer.mobile);
         } else {
-            await invoiceAPI.create(invoiceData);
+            alert("Customer phone number not found in database.");
+        }
+    };
+
+    const handleExport = () => {
+        if (filteredInvoices.length === 0) {
+            alert('No data to export');
+            return;
         }
 
-        // reload invoices from DB
-        await loadInvoices();
+        const headers = ['Pavati No', 'Date', 'Customer', 'Site', 'Vehicle', 'Products', 'Total Amount', 'Paid', 'Balance', 'Status'];
+        const csvRows = [headers.join(',')];
 
-        setShowForm(false);
-        setEditingInvoice(null);
+        filteredInvoices.forEach(inv => {
+            const products = (inv.items || []).map(i => i.product).join('; ');
+            const status = inv.balance === 0 ? 'Paid' : 'Pending';
+            const row = [
+                inv.pavatiNo,
+                new Date(inv.date).toLocaleDateString(),
+                `"${inv.customerName}"`,
+                `"${inv.site}"`,
+                inv.vehicleNo,
+                `"${products}"`,
+                inv.totalAmount,
+                inv.totalAdvance,
+                inv.balance,
+                status
+            ];
+            csvRows.push(row.join(','));
+        });
 
-    } catch (err) {
-        alert('Error saving invoice: ' + err.message);
-    }
-};
+        const csvContent = csvRows.join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `Invoices_Export_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     if (showForm) {
         return (
@@ -111,31 +161,52 @@ export function InvoicesList() {
         );
     }
 
-    // Get unique products for filter dropdown
-    const uniqueProducts = [...new Set(invoices.map(inv => inv.product))];
+    // Get unique products for filter dropdown (from items array)
+    const uniqueProducts = [...new Set(invoices.flatMap(inv => (inv.items || []).map(item => item.product)).filter(Boolean))];
 
     // Filter invoices
     const filteredInvoices = invoices.filter(invoice => {
+        const productNames = (invoice.items || []).map(i => i.product).join(' ');
         const matchesSearch =
             (invoice.customerName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
             (invoice.site || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
             (invoice.vehicleNo || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
             (invoice.pavatiNo || '').toString().includes(searchTerm);
 
-        const matchesProduct = filterProduct === 'all' || invoice.product === filterProduct;
+        const matchesProduct = filterProduct === 'all' || (invoice.items || []).some(i => i.product === filterProduct);
         const matchesStatus =
             filterStatus === 'all' ||
             (filterStatus === 'paid' && invoice.balance === 0) ||
             (filterStatus === 'pending' && invoice.balance > 0);
 
-        return matchesSearch && matchesProduct && matchesStatus;
+        const matchesTime = (() => {
+            if (filterTime === 'all') return true;
+            const invDate = new Date(invoice.date);
+            const now = new Date();
+            if (filterTime === 'today') {
+                return invDate.toDateString() === now.toDateString();
+            }
+            if (filterTime === 'week') {
+                const weekAgo = new Date();
+                weekAgo.setDate(now.getDate() - 7);
+                return invDate >= weekAgo;
+            }
+            if (filterTime === 'month') {
+                const monthAgo = new Date();
+                monthAgo.setMonth(now.getMonth() - 1);
+                return invDate >= monthAgo;
+            }
+            return true;
+        })();
+
+        return matchesSearch && matchesProduct && matchesStatus && matchesTime;
     });
 
     // Calculate statistics
     const stats = {
         total: filteredInvoices.length,
-        totalAmount: filteredInvoices.reduce((sum, inv) => sum + (inv.amount || 0), 0),
-        totalAdvance: filteredInvoices.reduce((sum, inv) => sum + (inv.advance || 0), 0),
+        totalAmount: filteredInvoices.reduce((sum, inv) => sum + (inv.totalAmount || 0), 0),
+        totalAdvance: filteredInvoices.reduce((sum, inv) => sum + (inv.totalAdvance || 0), 0),
         totalBalance: filteredInvoices.reduce((sum, inv) => sum + (inv.balance || 0), 0),
         paid: filteredInvoices.filter(inv => inv.balance === 0).length,
         pending: filteredInvoices.filter(inv => inv.balance > 0).length
@@ -153,7 +224,7 @@ export function InvoicesList() {
                     </div>
                     <div className="header-actions">
                         <button
-                            onClick={() => { }}
+                            onClick={handleExport}
                             className="export-btn"
                         >
                             <Download size={18} />
@@ -200,6 +271,16 @@ export function InvoicesList() {
                                 <option value="all">All Status</option>
                                 <option value="paid">Paid</option>
                                 <option value="pending">Pending</option>
+                            </select>
+                            <select
+                                value={filterTime}
+                                onChange={(e) => setFilterTime(e.target.value)}
+                                className="filter-select"
+                            >
+                                <option value="all">All Time</option>
+                                <option value="today">Today</option>
+                                <option value="week">This Week</option>
+                                <option value="month">This Month</option>
                             </select>
                         </div>
                     </div>
@@ -269,11 +350,11 @@ export function InvoicesList() {
                                             year: '2-digit'
                                         })}
                                     </td>
-                                    <td>{invoice.product}</td>
-                                    <td className="text-right">{(invoice.quantity || 0).toLocaleString()}</td>
-                                    <td className="text-right">₹ {invoice.rate}</td>
-                                    <td className="text-right">₹ {(invoice.amount || 0).toLocaleString()}</td>
-                                    <td className="text-right text-green-700">₹ {(invoice.advance || 0).toLocaleString()}</td>
+                                    <td>{(invoice.items || []).map(i => i.product).join(', ') || 'N/A'}</td>
+                                    <td className="text-right">{(invoice.items || []).reduce((s, i) => s + Number(i.quantity), 0).toLocaleString()}</td>
+                                    <td className="text-right">-</td>
+                                    <td className="text-right">₹ {(invoice.totalAmount || 0).toLocaleString()}</td>
+                                    <td className="text-right text-green-700">₹ {(invoice.totalAdvance || 0).toLocaleString()}</td>
                                     <td className="text-right">
                                         {invoice.balance > 0 ? (
                                             <span className="text-red-700">₹ {(invoice.balance || 0).toLocaleString()}</span>
@@ -309,7 +390,14 @@ export function InvoicesList() {
                                                 <CirclePlus size={16} />
                                             </button>
                                             <button
-                                                onClick={() => handleDelete(invoice._id)}
+                                                onClick={() => handleWhatsAppShare(invoice)}
+                                                className="action-btn wa-btn"
+                                                title="Share on WhatsApp"
+                                            >
+                                                <MessageCircle size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(invoice.id)}
                                                 className="action-btn delete-btn"
                                                 title="Delete"
                                             >
