@@ -95,29 +95,47 @@ export function InvoicesList() {
             return;
         }
 
-        const headers = ['Pavati No', 'Date', 'Customer', 'Site', 'Vehicle', 'Products', 'Total Amount', 'Paid', 'Balance', 'Status'];
+        const headers = [
+            'S. No.', 'Date', 'Product', 'Quantity', 'Rate', 'Amount', 
+            'Advance', 'Balance', 'Pavati N.', 'Customer Name', 'Site', 
+            'Vehicle No.', 'Marfat', 'Remarks'
+        ];
         const csvRows = [headers.join(',')];
 
-        filteredInvoices.forEach(inv => {
-            const products = (inv.items || []).map(i => i.product).join('; ');
-            const status = inv.balance === 0 ? 'Paid' : 'Pending';
-            const row = [
-                inv.pavatiNo,
-                new Date(inv.date).toLocaleDateString(),
-                `"${inv.customerName}"`,
-                `"${inv.site}"`,
-                inv.vehicleNo,
-                `"${products}"`,
-                inv.totalAmount,
-                inv.totalAdvance,
-                inv.balance,
-                status
-            ];
-            csvRows.push(row.join(','));
+        filteredInvoices.forEach((inv, index) => {
+            const dateStr = inv.date 
+                ? new Date(inv.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-') 
+                : '';
+            
+            const product = inv.items && inv.items.length > 0 ? inv.items[0].product : '';
+            const quantity = inv.items && inv.items.length > 0 ? inv.items[0].quantity : '';
+            const rate = inv.items && inv.items.length > 0 ? inv.items[0].rate : '';
+
+            const amountStr = `₹ ${Number(inv.totalAmount || 0).toLocaleString('en-IN')}`;
+            const advanceStr = `₹ ${Number(inv.totalAdvance || 0).toLocaleString('en-IN')}`;
+            const balanceStr = `₹ ${Number(inv.balance || 0).toLocaleString('en-IN')}`;
+
+            csvRows.push([
+                index + 1,
+                `${dateStr}`,
+                `"${product}"`,
+                quantity,
+                rate,
+                `"${amountStr}"`,
+                `"${advanceStr}"`,
+                `"${balanceStr}"`,
+                `"${inv.pavatiNo || ''}"`,
+                `"${inv.customerName || ''}"`,
+                `"${inv.site || ''}"`,
+                `"${inv.vehicleNo || ''}"`,
+                `"${inv.marfat || ''}"`,
+                `"${inv.remarks || ''}"`
+            ].join(','));
         });
 
         const csvContent = csvRows.join('\n');
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const bom = '\uFEFF';
+        const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.setAttribute('href', url);

@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS customers (
   email TEXT,
   address TEXT NOT NULL,
   createdAt TEXT,
+  updatedAt TEXT,
   synced INTEGER DEFAULT 0
 );
 
@@ -36,6 +37,7 @@ CREATE TABLE IF NOT EXISTS products (
   minStock INTEGER,
   currentStock INTEGER,
   createdAt TEXT,
+  updatedAt TEXT,
   synced INTEGER DEFAULT 0
 );
 
@@ -54,6 +56,7 @@ CREATE TABLE IF NOT EXISTS invoices (
   marfat TEXT,
   remarks TEXT,
   createdAt TEXT,
+  updatedAt TEXT,
   synced INTEGER DEFAULT 0
 );
 
@@ -75,6 +78,20 @@ CREATE TABLE IF NOT EXISTS invoice_payments (
   method TEXT,
   remarks TEXT,
   FOREIGN KEY (invoiceUuid) REFERENCES invoices (uuid) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS sync_state (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  entity TEXT UNIQUE NOT NULL,
+  lastSync TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS settings (
+  category TEXT NOT NULL,
+  setting_key TEXT NOT NULL,
+  setting_value TEXT,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (category, setting_key)
 );
 
 `);

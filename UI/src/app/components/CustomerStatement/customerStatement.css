@@ -1,0 +1,237 @@
+.statement-container {
+    padding: 24px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    background-color: var(--bg-primary);
+}
+
+.panel {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+}
+
+.statement-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: center; /* Changed from flex-end */
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 200px;
+}
+
+.control-group label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.control-input {
+    padding: 10px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.control-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px; /* Instead of margin-left: auto which can act weird when wrapping */
+    width: 100%; /* Push to full width or new line if squeezed */
+    justify-content: flex-end; /* Align to the right like margin-left: auto would have done */
+}
+
+.btn-primary, .btn-secondary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.btn-primary {
+    background-color: var(--text-main);
+    color: var(--card-bg);
+    border: none;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: var(--text-muted);
+}
+
+.btn-primary:disabled {
+    background-color: var(--border-color);
+    color: var(--text-muted);
+    cursor: not-allowed;
+    opacity: 1; /* Override inherited opacity that might be making it invisible */
+}
+
+.btn-secondary {
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+}
+
+.btn-secondary:hover {
+    background-color: var(--hover-bg);
+}
+
+.error-message {
+    padding: 12px 16px;
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border-radius: 8px;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    font-size: 0.875rem;
+}
+
+/* Document Preview & Print Styles */
+.statement-preview-wrapper {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.preview-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 16px;
+}
+
+.statement-document {
+    background-color: white; /* Always white inside document preview for print fidelity */
+    color: black;
+    padding: 40px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    max-width: 900px;
+    margin: 0 auto;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    width: 100%;
+}
+
+.doc-title {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.doc-divider {
+    border-top-width: 2px;
+}
+
+.doc-table th, .doc-table td {
+    border: 1px solid black;
+    padding: 6px 4px;
+}
+
+.doc-table th {
+    font-weight: bold;
+    text-align: center;
+}
+
+.totals-right > div > span:first-child {
+    border-right: 1px solid black;
+}
+
+.totals-grid {
+    width: 100%;
+}
+
+.totals-grid > div.border {
+    border: 2px solid black;
+}
+
+/* Utilities inside React component output */
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-left { text-align: left; }
+.font-bold { font-weight: bold; }
+.text-xl { font-size: 1.25rem; }
+.underline { text-decoration: underline; }
+.flex { display: flex; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.items-center { align-items: center; }
+.items-end { align-items: flex-end; }
+.flex-grow { flex-grow: 1; }
+.flex-col { flex-direction: column; }
+.w-full { width: 100%; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-4 { margin-top: 1rem; }
+.mt-6 { margin-top: 1.5rem; }
+.mt-8 { margin-top: 2rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-0 { margin-bottom: 0; }
+.ml-12 { margin-left: 3rem; }
+.mr-12 { margin-right: 3rem; }
+.mr-8 { margin-right: 2rem; }
+.pr-2 { padding-right: 0.5rem; }
+.p-1 { padding: 0.25rem; }
+.w-32 { width: 8rem; }
+.border-b { border-bottom: 1px solid black; }
+.italic { font-style: italic; }
+.py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+.border { border: 1px solid black; }
+.text-red-600 { color: #dc2626; }
+.border-red-500 { border-color: #ef4444; }
+.bg-orange-600 { background-color: #ea580c; }
+.w-16 { width: 4rem; }
+.h-8 { height: 2rem; }
+.inline-block { display: inline-block; }
+.shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+.grid { display: grid; }
+.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.gap-x-8 { column-gap: 2rem; }
+.gap-y-2 { row-gap: 0.5rem; }
+.h-full { height: 100%; }
+.block { display: block; }
+.opacity-0 { opacity: 0; }
+
+/* Printing Rule */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    .statement-document, .statement-document * {
+        visibility: visible;
+    }
+    .statement-document {
+        position: absolute;
+        left: 0;
+        top: 0;
+        box-shadow: none;
+        padding: 0;
+        margin: 0;
+        border: none;
+    }
+}

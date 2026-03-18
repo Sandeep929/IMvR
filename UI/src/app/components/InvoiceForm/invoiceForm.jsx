@@ -41,9 +41,9 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
         payments: [
             { date: new Date().toISOString().split('T')[0], amount: 0, method: 'Cash', remarks: 'Advance' }
         ],
-        totalAmount,
-        totalAdvance,
-        balance,
+        totalAmount: '',
+        totalAdvance: '',
+        balance: '',
         shareOnWhatsApp: false
     });
 

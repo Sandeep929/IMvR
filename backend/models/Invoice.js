@@ -25,7 +25,13 @@ const invoiceSchema = new mongoose.Schema({
     balance: { type: Number, default: 0 },
     marfat: { type: String, default: '' },
     remarks: { type: String },
-    createdAt: { type: Date, default: Date.now }
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now },
+});
+
+invoiceSchema.pre('save', function(next) {
+    this.updatedAt = Date.now();
+    next();
 });
 
 export default mongoose.model('Invoice', invoiceSchema);

@@ -11,12 +11,12 @@ export function Reports() {
 
     useEffect(() => {
         loadReportData();
-    }, []);
+    }, [dateRange]);
 
     const loadReportData = async () => {
         try {
             setLoading(true);
-            const res = await reportAPI.getData();
+            const res = await reportAPI.getData({ days: dateRange });
             setData(res.data);
         } catch (err) {
             setError(err.message);
@@ -26,34 +26,7 @@ export function Reports() {
         }
     };
 
-    const handleExport = () => {
-        if (!data) return;
 
-        const { summary, topCustomers } = data;
-        const headers = ['Metric', 'Value'];
-        const csvRows = [
-            ['Business Analytics Report', new Date().toLocaleDateString()].join(','),
-            [''],
-            headers.join(','),
-            ['Total Revenue', summary.totalRevenue],
-            ['Total Invoices', summary.totalInvoices],
-            ['Outstanding Balance', summary.totalBalance],
-            [''],
-            ['Top Customers', 'Revenue'],
-            ...topCustomers.map(c => [`"${c.name}"`, c.totalAmount])
-        ];
-
-        const csvContent = csvRows.map(row => row.join(',')).join('\n');
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.setAttribute('href', url);
-        link.setAttribute('download', `Business_Report_${new Date().toISOString().split('T')[0]}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
 
     if (loading) {
         return (
@@ -98,10 +71,6 @@ export function Reports() {
                             <option value="90">Last 90 Days</option>
                             <option value="365">Last Year</option>
                         </select>
-                        <button onClick={handleExport} className="export-btn">
-                            <Download size={18} />
-                            Export Report
-                        </button>
                     </div>
                 </div>
 

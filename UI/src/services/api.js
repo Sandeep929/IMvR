@@ -43,7 +43,15 @@ export const dashboardAPI = {
 
 // ─── Reports ────────────────────────────────────────────
 export const reportAPI = {
-    getData: () => api.get('/reports')
+    getData: (params) => api.get('/reports', { params }),
+    getStatement: (params) => api.get('/reports/statement', { params }),
+    getMasterData: (params) => api.get('/reports/master', { params })
+};
+
+// ─── Settings ─────────────────────────────────────────────
+export const settingsAPI = {
+    getSettings: () => api.get('/settings'),
+    updateSettings: (data) => api.post('/settings', data)
 };
 
 export default api;

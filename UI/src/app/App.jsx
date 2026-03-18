@@ -10,6 +10,7 @@ import { Reports } from './components/Reports/reports';
 import { Settings } from './components/Settings/settings';
 import { InvoiceForm } from './components/InvoiceForm/invoiceForm';
 import { InvoiceDetailView } from './components/InvoiceDetailView/invoiceDetailView';
+import { CustomerStatement } from './components/CustomerStatement/CustomerStatement';
 import '../styles/theme.css';
 import './App.css';
 
@@ -71,6 +72,8 @@ export default function App() {
                 return 'Products';
             case 'reports':
                 return 'Reports';
+            case 'statements':
+                return 'Customer Statements';
             case 'settings':
                 return 'Settings';
             default:
@@ -90,6 +93,8 @@ export default function App() {
                 return <Products />;
             case 'reports':
                 return <Reports />;
+            case 'statements':
+                return <CustomerStatement />;
             case 'settings':
                 return <Settings />;
             default:

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Building2, Mail, Phone, MapPin, Save, User, Lock, Bell, Printer, Globe, DollarSign } from 'lucide-react';
+import { settingsAPI } from '../../../services/api';
 import './settings.css';
 
 export function Settings() {
@@ -31,42 +32,58 @@ export function Settings() {
         defaultRate: '6.8'
     });
 
-    const [notifications, setNotifications] = useState({
-        emailNotifications: true,
-        lowStockAlerts: true,
-        paymentReminders: true,
-        invoiceUpdates: false
-    });
+    useEffect(() => {
+        loadSettings();
+    }, []);
+
+    const loadSettings = async () => {
+        try {
+            const res = await settingsAPI.getSettings();
+            const data = res.data;
+            if (data.company && Object.keys(data.company).length > 0) setCompanyInfo(prev => ({ ...prev, ...data.company }));
+            if (data.user && Object.keys(data.user).length > 0) setUserSettings(prev => ({ ...prev, ...data.user }));
+            if (data.invoice && Object.keys(data.invoice).length > 0) setInvoiceSettings(prev => ({ ...prev, ...data.invoice }));
+        } catch (err) {
+            console.error('Failed to load settings:', err);
+        }
+    };
+
+    const handleSaveSettings = async (category, settings) => {
+        try {
+            await settingsAPI.updateSettings({ category, settings });
+            alert(`${category.charAt(0).toUpperCase() + category.slice(1)} settings updated successfully`);
+        } catch (err) {
+            alert(`Failed to save ${category} settings`);
+            console.error(err);
+        }
+    };
 
     const handleCompanySubmit = (e) => {
         e.preventDefault();
-        alert('Company information updated successfully');
+        handleSaveSettings('company', companyInfo);
     };
 
     const handleUserSubmit = (e) => {
         e.preventDefault();
-        if (userSettings.newPassword !== userSettings.confirmPassword) {
-            alert('Passwords do not match');
+        if (userSettings.newPassword && userSettings.newPassword !== userSettings.confirmPassword) {
+            alert('New passwords do not match');
             return;
         }
-        alert('User settings updated successfully');
+        
+        // Exclude passwords from general settings save for security in a real app,
+        // but for this demo scale we'll save the whole user obj.
+        handleSaveSettings('user', userSettings);
     };
 
     const handleInvoiceSubmit = (e) => {
         e.preventDefault();
-        alert('Invoice settings updated successfully');
-    };
-
-    const handleNotificationSubmit = (e) => {
-        e.preventDefault();
-        alert('Notification preferences updated successfully');
+        handleSaveSettings('invoice', invoiceSettings);
     };
 
     const tabs = [
         { id: 'company', label: 'Company Info', icon: Building2 },
         { id: 'user', label: 'User Account', icon: User },
-        { id: 'invoice', label: 'Invoice Settings', icon: Printer },
-        { id: 'notifications', label: 'Notifications', icon: Bell }
+        { id: 'invoice', label: 'Invoice Settings', icon: Printer }
     ];
 
     return (
@@ -400,101 +417,6 @@ export function Settings() {
                                     >
                                         <Save size={18} />
                                         Save Changes
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    )}
-
-                    {activeTab === 'notifications' && (
-                        <div className="content-card">
-                            <div className="content-header">
-                                <h4 className="content-title">Notification Preferences</h4>
-                                <p className="content-subtitle">Manage how you receive alerts and updates</p>
-                            </div>
-                            <form onSubmit={handleNotificationSubmit}>
-                                <div className="settings-form-body">
-                                    <div className="notifications-spacing">
-                                        <div className="notification-item">
-                                            <div className="notification-text">
-                                                <p className="notification-title">Email Notifications</p>
-                                                <p className="notification-desc">Receive updates via email</p>
-                                            </div>
-                                            <label className="toggle-switch">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={notifications.emailNotifications}
-                                                    onChange={(e) => setNotifications({ ...notifications, emailNotifications: e.target.checked })}
-                                                    className="toggle-input"
-                                                />
-                                                <div className="toggle-bg">
-                                                    <div className="toggle-dot"></div>
-                                                </div>
-                                            </label>
-                                        </div>
-
-                                        <div className="notification-item">
-                                            <div className="notification-text">
-                                                <p className="notification-title">Low Stock Alerts</p>
-                                                <p className="notification-desc">Get notified when stock is low</p>
-                                            </div>
-                                            <label className="toggle-switch">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={notifications.lowStockAlerts}
-                                                    onChange={(e) => setNotifications({ ...notifications, lowStockAlerts: e.target.checked })}
-                                                    className="toggle-input"
-                                                />
-                                                <div className="toggle-bg">
-                                                    <div className="toggle-dot"></div>
-                                                </div>
-                                            </label>
-                                        </div>
-
-                                        <div className="notification-item">
-                                            <div className="notification-text">
-                                                <p className="notification-title">Payment Reminders</p>
-                                                <p className="notification-desc">Reminders for pending payments</p>
-                                            </div>
-                                            <label className="toggle-switch">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={notifications.paymentReminders}
-                                                    onChange={(e) => setNotifications({ ...notifications, paymentReminders: e.target.checked })}
-                                                    className="toggle-input"
-                                                />
-                                                <div className="toggle-bg">
-                                                    <div className="toggle-dot"></div>
-                                                </div>
-                                            </label>
-                                        </div>
-
-                                        <div className="notification-item">
-                                            <div className="notification-text">
-                                                <p className="notification-title">Invoice Updates</p>
-                                                <p className="notification-desc">Notifications for invoice changes</p>
-                                            </div>
-                                            <label className="toggle-switch">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={notifications.invoiceUpdates}
-                                                    onChange={(e) => setNotifications({ ...notifications, invoiceUpdates: e.target.checked })}
-                                                    className="toggle-input"
-                                                />
-                                                <div className="toggle-bg">
-                                                    <div className="toggle-dot"></div>
-                                                </div>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="settings-form-footer">
-                                    <button
-                                        type="submit"
-                                        className="save-btn"
-                                    >
-                                        <Save size={18} />
-                                        Save Preferences
                                     </button>
                                 </div>
                             </form>

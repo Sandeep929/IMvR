@@ -7,9 +7,8 @@ import productRoutes from './routes/products.js';
 import customerRoutes from './routes/customers.js';
 import dashboardRoutes from './routes/dashboard.js';
 import reportRoutes from './routes/reports.js';
+import settingsRoutes from './routes/settings.js';
 import { startAutoSync } from './sync/syncService.js';
-
-
 
 dotenv.config();
 
@@ -29,6 +28,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/settings', settingsRoutes);
 
 app.get('/', (req, res) => {
     res.send('JC Bricks Backend is Running');

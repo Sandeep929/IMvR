@@ -9,6 +9,7 @@ export function Sidebar({ activeTab, setActiveTab }) {
         { id: 'invoices', icon: FileText, label: 'Invoices' },
         { id: 'customers', icon: Users, label: 'Customers' },
         { id: 'products', icon: Package, label: 'Products' },
+        { id: 'statements', icon: FileText, label: 'Statements' },
         { id: 'reports', icon: BarChart3, label: 'Reports' },
         { id: 'settings', icon: Settings, label: 'Settings' },
     ];
