@@ -1,6 +1,6 @@
 import React from 'react';
 import { Printer, Download, X } from 'lucide-react';
-import brickImage from '../../../assets/799b5e090af0c56945bf82c5795a9cd1c7470511.png';
+import brickImage from '../../../assets/print-logo.jpg';
 import './invoiceDetailView.css';
 import logo from "../../../assets/Gemini_Generated_Image_98lfx498lfx498lf.png";
 
@@ -32,9 +32,15 @@ export function InvoiceDetailView({ invoice, onClose }) {
             .summary-row { display: flex; justify-content: space-between; padding: 5px 0; }
             .totals-table { width: auto; margin-left: auto; margin-top: 20px; }
             .signature-section { margin-top: 40px; }
+            .company-branding { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+            .branding-left { display: flex; align-items: center; gap: 15px; }
+            img.logo-img { max-height: 80px; width: auto; object-fit: contain; }
+            img.brick-logo { max-height: 80px; width: auto; object-fit: contain; }
             @media print {
               body { margin: 0; padding: 15px; }
               button { display: none; }
+              img.logo-img { max-height: 80px !important; width: auto !important; }
+              img.brick-logo { max-height: 80px !important; width: auto !important; }
             }
           </style>
         </head>
@@ -53,7 +59,9 @@ export function InvoiceDetailView({ invoice, onClose }) {
     };
 
     const handleDownloadPDF = () => {
-        alert('PDF download functionality would be implemented here using a library like jsPDF or react-pdf');
+        // Since we are leveraging the native print window, users can select "Save as PDF"
+        // which perfectly preserves the layout.
+        handlePrint();
     };
 
     // Normalize items — support both new multi-item format and old single-item format
