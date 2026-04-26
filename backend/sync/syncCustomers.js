@@ -15,10 +15,12 @@ export const syncCustomers = async () => {
           uuid: c.uuid,
           name: c.name,
           phone: c.phone,
+          whatsappNumber: c.whatsappNumber || null,
           email: c.email,
           address: c.address,
-          createdAt: c.createdAt,
-          updatedAt: c.updatedAt
+          createdAt: c.createdAt || new Date().toISOString(),
+          updatedAt: c.updatedAt || new Date().toISOString(),
+          isDeleted: c.isDeleted === 1
         },
         { upsert: true }
       );
@@ -39,20 +41,27 @@ export const syncCustomers = async () => {
     const stateRow = db.prepare(`SELECT lastSync FROM sync_state WHERE entity = 'customers'`).get();
     let lastSyncTime = stateRow ? new Date(stateRow.lastSync) : new Date(0);
 
-    // Find customers modified in Mongo *after* our last sync time
-    const updatedInCloud = await Customer.find({ updatedAt: { $gt: lastSyncTime } });
+    // Find customers modified in Mongo *after* our last sync time, or fallback to createdAt
+    const updatedInCloud = await Customer.find({
+      $or: [
+        { updatedAt: { $gt: lastSyncTime } },
+        { createdAt: { $gt: lastSyncTime } }
+      ]
+    });
 
     if (updatedInCloud.length > 0) {
       const insertOrUpdate = db.prepare(`
-        INSERT INTO customers (uuid, name, phone, email, address, createdAt, updatedAt, synced)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+        INSERT INTO customers (uuid, name, phone, whatsappNumber, email, address, createdAt, updatedAt, isDeleted, synced)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
         ON CONFLICT(uuid) DO UPDATE SET
           name = excluded.name,
           phone = excluded.phone,
+          whatsappNumber = excluded.whatsappNumber,
           email = excluded.email,
           address = excluded.address,
           createdAt = excluded.createdAt,
           updatedAt = excluded.updatedAt,
+          isDeleted = excluded.isDeleted,
           synced = 1
       `);
 
@@ -62,10 +71,12 @@ export const syncCustomers = async () => {
             c.uuid, 
             c.name, 
             c.phone, 
+            c.whatsappNumber || null,
             c.email, 
             c.address, 
             c.createdAt ? c.createdAt.toISOString() : null,
-            c.updatedAt ? c.updatedAt.toISOString() : null
+            c.updatedAt ? c.updatedAt.toISOString() : null,
+            c.isDeleted ? 1 : 0
           );
         }
       });

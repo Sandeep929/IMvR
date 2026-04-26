@@ -1,12 +1,13 @@
 const { app, ipcMain, BrowserWindow } = require("electron");
 const path = require("path");
-const { fork } = require('child_process');
+const { spawn } = require('child_process');
 
 let serverProcess;
 
 function startServer() {
   const serverPath = path.join(__dirname, '../../backend/server.js');
-  serverProcess = fork(serverPath);
+  const backendDir = path.join(__dirname, '../../backend');
+  serverProcess = spawn('node', [serverPath], { stdio: 'inherit', cwd: backendDir });
 
   serverProcess.on('error', (err) => {
     console.error('Failed to start server:', err);

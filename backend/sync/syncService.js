@@ -3,6 +3,7 @@ import isOnline from 'is-online';
 import { syncCustomers } from './syncCustomers.js';
 import { syncProducts } from './syncProducts.js';
 import { syncInvoices } from './syncInvoices.js';
+import { syncSettings } from './syncSettings.js';
 
 export const startAutoSync = () => {
 
@@ -15,6 +16,7 @@ export const startAutoSync = () => {
       await syncCustomers();
       await syncProducts();
       await syncInvoices();
+      await syncSettings();
 
       console.log("Sync complete ✔");
 

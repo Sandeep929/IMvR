@@ -41,7 +41,7 @@ export const updateSettings = (req, res) => {
       INSERT INTO settings (category, setting_key, setting_value) 
       VALUES (?, ?, ?) 
       ON CONFLICT(category, setting_key) 
-      DO UPDATE SET setting_value = excluded.setting_value, updatedAt = CURRENT_TIMESTAMP
+      DO UPDATE SET setting_value = excluded.setting_value, updatedAt = CURRENT_TIMESTAMP, synced = 0
     `);
 
     const updateTx = db.transaction((settingsObj) => {

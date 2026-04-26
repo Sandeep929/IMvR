@@ -4,6 +4,7 @@ import { invoiceAPI, customerAPI } from '@/services/api';
 import { InvoiceForm } from '../InvoiceForm/invoiceForm';
 import { InvoiceDetailView } from '../InvoiceDetailView/invoiceDetailView';
 import { shareInvoiceOnWhatsApp } from '../../../utils/whatsapp';
+import * as XLSX from 'xlsx';
 import './invoicesList.css';
 
 export function InvoicesList() {
@@ -17,7 +18,8 @@ export function InvoicesList() {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterProduct, setFilterProduct] = useState('all');
     const [filterStatus, setFilterStatus] = useState('all');
-    const [filterTime, setFilterTime] = useState('all'); // 'all' | 'today' | 'week' | 'month'
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
 
     useEffect(() => {
         loadInvoices();
@@ -82,8 +84,9 @@ export function InvoicesList() {
 
     const handleWhatsAppShare = (invoice) => {
         const customer = customers.find(c => c.name === invoice.customerName);
-        if (customer && (customer.phone || customer.mobile)) {
-            shareInvoiceOnWhatsApp(invoice, customer.phone || customer.mobile);
+        if (customer && (customer.whatsappNumber || customer.phone || customer.mobile)) {
+            const targetNumber = customer.whatsappNumber || customer.phone || customer.mobile;
+            shareInvoiceOnWhatsApp(invoice, targetNumber);
         } else {
             alert("Customer phone number not found in database.");
         }
@@ -95,14 +98,7 @@ export function InvoicesList() {
             return;
         }
 
-        const headers = [
-            'S. No.', 'Date', 'Product', 'Quantity', 'Rate', 'Amount', 
-            'Advance', 'Balance', 'Pavati N.', 'Customer Name', 'Site', 
-            'Vehicle No.', 'Marfat', 'Remarks'
-        ];
-        const csvRows = [headers.join(',')];
-
-        filteredInvoices.forEach((inv, index) => {
+        const exportData = filteredInvoices.map((inv, index) => {
             const dateStr = inv.date 
                 ? new Date(inv.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-') 
                 : '';
@@ -111,39 +107,56 @@ export function InvoicesList() {
             const quantity = inv.items && inv.items.length > 0 ? inv.items[0].quantity : '';
             const rate = inv.items && inv.items.length > 0 ? inv.items[0].rate : '';
 
-            const amountStr = `₹ ${Number(inv.totalAmount || 0).toLocaleString('en-IN')}`;
-            const advanceStr = `₹ ${Number(inv.totalAdvance || 0).toLocaleString('en-IN')}`;
-            const balanceStr = `₹ ${Number(inv.balance || 0).toLocaleString('en-IN')}`;
+            const customer = customers.find(c => c.name === inv.customerName);
+            const contactNo = customer ? (customer.phone || customer.mobile || '') : '';
+            const whatsappNo = customer ? (customer.whatsappNumber || '') : '';
 
-            csvRows.push([
-                index + 1,
-                `${dateStr}`,
-                `"${product}"`,
-                quantity,
-                rate,
-                `"${amountStr}"`,
-                `"${advanceStr}"`,
-                `"${balanceStr}"`,
-                `"${inv.pavatiNo || ''}"`,
-                `"${inv.customerName || ''}"`,
-                `"${inv.site || ''}"`,
-                `"${inv.vehicleNo || ''}"`,
-                `"${inv.marfat || ''}"`,
-                `"${inv.remarks || ''}"`
-            ].join(','));
+            return {
+                'S. No.': index + 1,
+                'Date': dateStr,
+                'Product': product,
+                'Quantity': quantity,
+                'Rate': rate,
+                'Amount': inv.totalAmount || 0,
+                'Advance': inv.totalAdvance || 0,
+                'Balance': inv.balance || 0,
+                'Pavati N.': inv.pavatiNo || '',
+                'Customer Name': inv.customerName || '',
+                'Contact No.': contactNo,
+                'WhatsApp No.': whatsappNo,
+                'Site': inv.site || '',
+                'Vehicle No.': inv.vehicleNo || '',
+                'Marfat': inv.marfat || '',
+                'Remarks': inv.remarks || ''
+            };
         });
 
-        const csvContent = csvRows.join('\n');
-        const bom = '\uFEFF';
-        const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.setAttribute('href', url);
-        link.setAttribute('download', `Invoices_Export_${new Date().toISOString().split('T')[0]}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        
+        const wscols = [
+            {wch: 8},  // S.No
+            {wch: 12}, // Date
+            {wch: 22}, // Product
+            {wch: 10}, // Qty
+            {wch: 10}, // Rate
+            {wch: 12}, // Amount
+            {wch: 12}, // Advance
+            {wch: 12}, // Balance
+            {wch: 12}, // Pavati
+            {wch: 22}, // Customer Name
+            {wch: 18}, // Contact No
+            {wch: 18}, // WhatsApp No
+            {wch: 22}, // Site
+            {wch: 15}, // Vehicle No
+            {wch: 15}, // Marfat
+            {wch: 25}  // Remarks
+        ];
+        worksheet['!cols'] = wscols;
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Invoices");
+
+        XLSX.writeFile(workbook, `Invoices_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
     };
 
     if (showForm) {
@@ -198,22 +211,21 @@ export function InvoicesList() {
             (filterStatus === 'pending' && invoice.balance > 0);
 
         const matchesTime = (() => {
-            if (filterTime === 'all') return true;
             const invDate = new Date(invoice.date);
-            const now = new Date();
-            if (filterTime === 'today') {
-                return invDate.toDateString() === now.toDateString();
+            invDate.setHours(0, 0, 0, 0);
+
+            if (startDate) {
+                const start = new Date(startDate);
+                start.setHours(0, 0, 0, 0);
+                if (invDate < start) return false;
             }
-            if (filterTime === 'week') {
-                const weekAgo = new Date();
-                weekAgo.setDate(now.getDate() - 7);
-                return invDate >= weekAgo;
+            
+            if (endDate) {
+                const end = new Date(endDate);
+                end.setHours(0, 0, 0, 0);
+                if (invDate > end) return false;
             }
-            if (filterTime === 'month') {
-                const monthAgo = new Date();
-                monthAgo.setMonth(now.getMonth() - 1);
-                return invDate >= monthAgo;
-            }
+            
             return true;
         })();
 
@@ -290,16 +302,24 @@ export function InvoicesList() {
                                 <option value="paid">Paid</option>
                                 <option value="pending">Pending</option>
                             </select>
-                            <select
-                                value={filterTime}
-                                onChange={(e) => setFilterTime(e.target.value)}
-                                className="filter-select"
-                            >
-                                <option value="all">All Time</option>
-                                <option value="today">Today</option>
-                                <option value="week">This Week</option>
-                                <option value="month">This Month</option>
-                            </select>
+                            <div className="flex items-center gap-2">
+                                <label className="text-sm text-gray-600 font-medium">From:</label>
+                                <input
+                                    type="date"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                    className="filter-select"
+                                />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <label className="text-sm text-gray-600 font-medium">To:</label>
+                                <input
+                                    type="date"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                    className="filter-select"
+                                />
+                            </div>
                         </div>
                     </div>
 

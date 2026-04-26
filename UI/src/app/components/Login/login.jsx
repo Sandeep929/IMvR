@@ -13,16 +13,20 @@ export function Login({ onLogin }) {
     setError('');
     setIsLoading(true);
 
-    setTimeout(() => {
+    setTimeout(async () => {
       // Logic from original file. 
       // Note: onLogin implementation is passed as prop.
-      const success = onLogin(username, password);
+      const success = await onLogin(username, password);
       if (!success) {
         setError('Invalid username or password');
       }
       setIsLoading(false);
     }, 500);
   };
+
+  const companyInfo = JSON.parse(localStorage.getItem('companySettings') || '{}');
+  const compName = companyInfo.name || 'JC Bricks Manufacturing';
+  const compAddress = companyInfo.address || 'Village Bisnawda Dhar Road Indore-453001 (M.P.) India';
 
   return (
     <div className="login-container">
@@ -42,7 +46,7 @@ export function Login({ onLogin }) {
                 <img src={logo} alt="logo" className="logo-img" />
               </div>
               <div className="branding-title">
-                <h1>JC Bricks Manufacturing</h1>
+                <h1>{compName}</h1>
                 <p>Enterprise Management System</p>
               </div>
             </div>
@@ -81,10 +85,10 @@ export function Login({ onLogin }) {
 
           <div className="branding-footer">
             <p className="footer-text">
-              Village Bisnawda Dhar Road Indore-453001 (M.P.) India
+              {compAddress}
             </p>
             <p className="footer-text-copyright">
-              © 2026 JC Bricks Manufacturing. All rights reserved.
+              © {new Date().getFullYear()} {compName}. All rights reserved.
             </p>
           </div>
         </div>
@@ -99,7 +103,7 @@ export function Login({ onLogin }) {
                 <img src={logo} alt="mob-logo" className='mob-logo' />
               </div>
               <div className="mobile-logo-text">
-                <h1>JC Bricks Manufacturing</h1>
+                <h1>{compName}</h1>
               </div>
             </div>
             <h2 className="form-title">Sign In</h2>

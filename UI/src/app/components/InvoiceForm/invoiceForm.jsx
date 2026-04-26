@@ -1,30 +1,42 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, MessageCircle } from 'lucide-react';
+import { Share2, X, Plus, Trash2, MessageCircle } from 'lucide-react';
 import { shareInvoiceOnWhatsApp } from '../../../utils/whatsapp';
+import { SearchableDropdown } from '../ui/SearchableDropdown';
 import './invoiceForm.css';
 
 export function InvoiceForm({ invoice, onSave, onCancel }) {
     const [customers, setCustomers] = useState([]);
-    const [products, setProducts] = useState([
-        { id: 1, name: 'Fresh Bricks', rate: 6.8 },
-        { id: 2, name: 'Khanjar', rate: 5.5 },
-        { id: 3, name: 'Red Bricks', rate: 7.2 },
-        { id: 4, name: 'Fly Ash Bricks', rate: 6.0 }
-    ]);
+    const [products, setProducts] = useState([]);
 
     useEffect(() => {
-        const fetchCustomers = async () => {
+        const fetchData = async () => {
             try {
                 const res = await fetch('http://localhost:5000/api/customers');
                 const data = await res.json();
                 setCustomers(data);
+
+                const resProducts = await fetch('http://localhost:5000/api/products');
+                const dataProducts = await resProducts.json();
+                setProducts(dataProducts);
+                
+                if (!invoice && dataProducts.length > 0) {
+                    setFormData(prev => {
+                        if (prev.items.length === 1 && prev.items[0].product === '') {
+                            const newItems = [...prev.items];
+                            newItems[0].product = dataProducts[0].name;
+                            newItems[0].rate = dataProducts[0].rate;
+                            return { ...prev, items: newItems };
+                        }
+                        return prev;
+                    });
+                }
             } catch (err) {
-                console.error("Failed to load customers", err);
+                console.error("Failed to load initial data", err);
             }
         };
 
-        fetchCustomers();
-    }, []);
+        fetchData();
+    }, [invoice]);
 
     const [formData, setFormData] = useState({
         date: new Date().toISOString().split('T')[0],
@@ -36,7 +48,7 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
         marfat: '',
         remarks: '',
         items: [
-            { product: 'Fresh Bricks', quantity: 0, rate: 6.8, amount: 0 }
+            { product: '', quantity: 0, rate: 0, amount: 0 }
         ],
         payments: [
             { date: new Date().toISOString().split('T')[0], amount: 0, method: 'Cash', remarks: 'Advance' }
@@ -52,7 +64,7 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
             setFormData({
                 ...invoice,
                 date: invoice.date ? new Date(invoice.date).toISOString().split('T')[0] : '',
-                items: invoice.items || [{ product: 'Fresh Bricks', quantity: 0, rate: 6.8, amount: 0 }],
+                items: invoice.items || [{ product: '', quantity: 0, rate: 0, amount: 0 }],
                 payments: invoice.payments || [{ date: new Date().toISOString().split('T')[0], amount: 0, method: 'Cash', remarks: 'Advance' }]
             });
         }
@@ -80,7 +92,7 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
     // Item Handlers
     const handleItemChange = (index, field, value) => {
         const newItems = [...formData.items];
-        newItems[index][field] = field === 'product' ? value : parseFloat(value) || 0;
+        newItems[index][field] = value;
 
         if (field === 'product') {
             const selectedProduct = products.find(p => p.name === value);
@@ -89,14 +101,17 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
             }
         }
 
-        newItems[index].amount = newItems[index].quantity * newItems[index].rate;
+        const qty = parseFloat(newItems[index].quantity) || 0;
+        const rate = parseFloat(newItems[index].rate) || 0;
+        newItems[index].amount = qty * rate;
+        
         setFormData(prev => ({ ...prev, items: newItems }));
     };
 
     const addItem = () => {
         setFormData(prev => ({
             ...prev,
-            items: [...prev.items, { product: 'Fresh Bricks', quantity: 0, rate: 6.8, amount: 0 }]
+            items: [...prev.items, { product: products.length > 0 ? products[0].name : '', quantity: '', rate: products.length > 0 ? products[0].rate : 0, amount: 0 }]
         }));
     };
 
@@ -110,7 +125,7 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
     // Payment Handlers
     const handlePaymentChange = (index, field, value) => {
         const newPayments = [...formData.payments];
-        newPayments[index][field] = field === 'amount' ? parseFloat(value) || 0 : value;
+        newPayments[index][field] = value;
         setFormData(prev => ({ ...prev, payments: newPayments }));
     };
 
@@ -158,7 +173,7 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                         {/* Basic Information */}
                         <div className="form-section">
                             <h4 className="section-title">Basic Information</h4>
-                            <div className="form-grid-3">
+                            <div className="form-grid-2">
                                 <div className="form-group">
                                     <label className="form-label">Date <span className="required">*</span></label>
                                     <input type="date" name="date" value={formData.date} onChange={handleChange} required className="form-input-i" />
@@ -166,10 +181,6 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                                 <div className="form-group">
                                     <label className="form-label">Pavati Number <span className="required">*</span></label>
                                     <input type='text' name="pavatiNo" value={formData.pavatiNo} onChange={handleChange} required className="form-input-i" />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Order Number</label>
-                                    <input type='text' name="orderNo" value={formData.orderNo} onChange={handleChange} className="form-input-i" />
                                 </div>
                             </div>
                         </div>
@@ -180,12 +191,12 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                             <div className="form-grid-2">
                                 <div className="form-group">
                                     <label className="form-label">Customer Name <span className="required">*</span></label>
-                                    <select name="customerName" value={formData.customerName} onChange={handleChange} required className="form-select-i">
-                                        <option value="">Select Customer</option>
-                                        {customers.map((customer) => (
-                                            <option key={customer.id || customer.uuid} value={customer.name}>{customer.name}</option>
-                                        ))}
-                                    </select>
+                                    <SearchableDropdown
+                                        options={customers.map(c => ({ label: c.name, value: c.name }))}
+                                        value={formData.customerName}
+                                        onChange={(val) => handleChange({ target: { name: 'customerName', value: val } })}
+                                        placeholder="Select Customer..."
+                                    />
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Site Location <span className="required">*</span></label>
@@ -230,7 +241,8 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                                                         onChange={(e) => handleItemChange(index, 'product', e.target.value)}
                                                         className="form-select-i"
                                                     >
-                                                        {products.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                                                        <option value="" disabled>Select a product...</option>
+                                                        {products.map(p => <option key={p._id || p.id} value={p.name}>{p.name}</option>)}
                                                     </select>
                                                 </td>
                                                 <td>

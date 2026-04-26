@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 const productSchema = new mongoose.Schema({
+    uuid: { type: String, unique: true },
     name: { type: String, required: true },
     category: { type: String, default: 'Standard' },
     description: { type: String },
@@ -9,7 +10,8 @@ const productSchema = new mongoose.Schema({
     minStock: { type: Number, default: 0 },
     currentStock: { type: Number, default: 0 },
     createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
+    updatedAt: { type: Date, default: Date.now },
+    isDeleted: { type: Boolean, default: false }
 });
 
 productSchema.pre('save', function(next) {

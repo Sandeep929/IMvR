@@ -4,6 +4,10 @@ import './sidebar.css';
 import logo from "../../../assets/Gemini_Generated_Image_98lfx498lfx498lf.png";
 
 export function Sidebar({ activeTab, setActiveTab }) {
+    const companyInfo = JSON.parse(localStorage.getItem('companySettings') || '{}');
+    const compNameRaw = companyInfo.name || 'JC Bricks Manufacturing';
+    const compName = compNameRaw.replace(' Manufacturing', '') || 'JC Bricks';
+
     const menuItems = [
         { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
         { id: 'invoices', icon: FileText, label: 'Invoices' },
@@ -23,7 +27,7 @@ export function Sidebar({ activeTab, setActiveTab }) {
                         <img src={logo} alt="logo" className='logo-img'/>
                     </div>
                     <div className="logo-text">
-                        <h1 className="logo-title">JC Bricks</h1>
+                        <h1 className="logo-title">{compName}</h1>
                         <p className="logo-subtitle">Manufacturing</p>
                     </div>
                 </div>
@@ -54,7 +58,7 @@ export function Sidebar({ activeTab, setActiveTab }) {
             <div className="sidebar-footer">
                 <div className="footer-content">
                     <p className="footer-text">Version 1.0.0</p>
-                    <p className="footer-text">© 2026 JC Bricks</p>
+                    <p className="footer-text">© {new Date().getFullYear()} {compName}</p>
                 </div>
             </div>
         </div>

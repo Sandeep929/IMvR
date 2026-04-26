@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Download, Search, Printer, FileText } from 'lucide-react';
 import { reportAPI, customerAPI } from '../../../services/api';
+import { SearchableDropdown } from '../ui/SearchableDropdown';
+import brickImage from '../../../assets/print-logo.jpg';
+import logo from "../../../assets/Gemini_Generated_Image_98lfx498lfx498lf.png";
 import './customerStatement.css';
 
 export function CustomerStatement() {
@@ -68,7 +71,7 @@ export function CustomerStatement() {
             // Generate Master Data CSV according to requested format
             const headers = [
                 'S. No.', 'Date', 'Product', 'Quantity', 'Rate', 'Amount', 
-                'Advance', 'Balance', 'Pavati N.', 'Customer Name', 'Site', 
+                'Advance', 'Balance', 'Pavati N.', 'Customer Name', 'Contact No.', 'Site', 
                 'Vehicle No.', 'Marfat', 'Remarks'
             ];
             const rows = [headers.join(',')];
@@ -97,6 +100,7 @@ export function CustomerStatement() {
                     `"${balanceStr}"`,
                     `"${inv.pavatiNo || ''}"`,
                     `"${inv.customerName || ''}"`,
+                    `"${inv.customerPhone || ''}"`,
                     `"${inv.site || ''}"`,
                     `"${inv.vehicleNo || ''}"`,
                     `"${inv.marfat || ''}"`,
@@ -124,21 +128,24 @@ export function CustomerStatement() {
     // Find the currently selected customer object to get their details (phone, address, etc)
     const currentCustomerObj = customers.find(c => c.name === selectedCustomer) || {};
 
+    const companyInfo = JSON.parse(localStorage.getItem('companySettings') || '{}');
+    const compName = companyInfo.name || 'JC Bricks Manufacturing';
+    const compAddress = companyInfo.address || 'Village Bisnawda Dhar Road Indore-453001 (M.P.) India';
+    const compPhone = companyInfo.phone || '9826305085, 9926777485';
+    const compWhatsapp = companyInfo.whatsapp || '9977175856';
+    const compEmail = companyInfo.email || 'jcbricksmanufacturing@gmail.com';
+
     return (
         <div className="statement-container">
             <div className="statement-controls panel">
                 <div className="control-group">
                     <label>Customer</label>
-                    <select 
+                    <SearchableDropdown
+                        options={customers.map(c => ({ label: c.name, value: c.name }))}
                         value={selectedCustomer} 
-                        onChange={(e) => setSelectedCustomer(e.target.value)}
-                        className="control-input"
-                    >
-                        <option value="">Select Customer...</option>
-                        {customers.map(c => (
-                            <option key={c.uuid} value={c.name}>{c.name}</option>
-                        ))}
-                    </select>
+                        onChange={(val) => setSelectedCustomer(val)}
+                        placeholder="Select Customer..."
+                    />
                 </div>
                 <div className="control-group">
                     <label>Start Date</label>
@@ -183,30 +190,36 @@ export function CustomerStatement() {
                     <div className="statement-document" ref={printRef}>
                         {/* HEADER - Designed matches the reference image */}
                         <div className="doc-header">
-                            <h1 className="doc-title text-center">JC Bricks Manufacturing</h1>
-                            
-                            <div className="doc-subheader flex justify-between items-center mt-4">
-                                <div className="logo-placeholder">
-                                    <h2 className="text-red-600 font-bold mb-0">JC Bricks</h2>
+                            <div className="flex justify-between items-center mb-2" style={{ padding: '0 10px' }}>
+                                {/* Left Logo */}
+                                <div style={{ width: '25%', display: 'flex', justifyContent: 'flex-start' }}>
+                                    <img src={logo} alt="logo" style={{ maxHeight: '85px', width: 'auto', objectFit: 'contain' }} />
                                 </div>
-                                <div className="address-block text-center flex-grow">
-                                    <p>Village Bisnawda Dhar Road Indore-453001 (M.P.) India</p>
+                                
+                                {/* Center Title & Address */}
+                                <div style={{ width: '50%', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                    <h1 className="doc-title font-bold" style={{ fontSize: '26px', marginBottom: '6px', letterSpacing: '0.5px' }}>{compName}</h1>
+                                    <p style={{ fontSize: '13px', color: '#111', margin: 0, fontWeight: 500 }}>{compAddress}</p>
                                 </div>
-                                <div className="brick-img-placeholder">
-                                    {/* Usually an image goes here, placeholder div for now */}
-                                    <div className="bg-orange-600 w-16 h-8 inline-block shadow-md"></div>
+
+                                {/* Right Logo + Text */}
+                                <div style={{ width: '25%', display: 'flex', justifyContent: 'flex-end' }}>
+                                    <div className="flex flex-col items-center" style={{ gap: '2px' }}>
+                                        <img src={brickImage} alt="Brick" style={{ maxHeight: '75px', width: 'auto', objectFit: 'contain' }} />
+                                        <h2 className="text-red-600 font-bold mb-0" style={{ fontSize: '1.2rem', letterSpacing: '0.5px', marginTop: '4px' }}>JC Bricks</h2>
+                                    </div>
                                 </div>
                             </div>
                             
-                            <hr className="doc-divider mt-2 mb-2 border-red-500" />
+                            <hr className="doc-divider mt-2 mb-2 w-full" style={{ borderTopWidth: '3px', borderColor: '#dc2626' }} />
                             
                             <div className="contact-block flex justify-between mt-4">
                                 <div>
-                                    <p><strong>Contact No. :</strong> 9826305085, 9926777485</p>
-                                    <p><strong>WhatsApp No. :</strong> 9977175856</p>
+                                    <p><strong>Contact No. :</strong> {compPhone}</p>
+                                    <p><strong>WhatsApp No. :</strong> {compWhatsapp}</p>
                                 </div>
                                 <div className="text-right">
-                                    <p><strong>Email ID :</strong> jcbricksmanufacturing@gmail.com</p>
+                                    <p><strong>Email ID :</strong> {compEmail}</p>
                                     <p className="mt-4">
                                         <strong>Date : </strong> 
                                         {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-')}
@@ -222,7 +235,14 @@ export function CustomerStatement() {
                                 <div>
                                     <p><strong>Name :</strong> {selectedCustomer} Ji</p>
                                     <p><strong>Address :</strong> {currentCustomerObj.address || ''}</p>
-                                    <p><strong>Contact No. :</strong> {currentCustomerObj.phone || ''}</p>
+                                    <div className="flex">
+                                        <strong className="mr-1">Contact No. :</strong>
+                                        <div className="flex flex-col">
+                                            {(currentCustomerObj.phone || '').split(',').map((num, i) => (
+                                                <span key={i}>{num.trim()}</span>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
                                 <div className="flex items-end">
                                     <p><strong>Email ID :</strong> {currentCustomerObj.email || ''}</p>
@@ -239,6 +259,7 @@ export function CustomerStatement() {
                                     <th>Product Detail</th>
                                     <th>Quantity</th>
                                     <th>Pavti No.</th>
+                                    <th style={{ maxWidth: '150px' }}>Site</th>
                                     <th>Rate</th>
                                     <th>Total Amount</th>
                                     <th>Advance Amount</th>
@@ -246,29 +267,30 @@ export function CustomerStatement() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {statementData.lines.map((line, idx) => (
+                                {(statementData.lines || []).map((line, idx) => (
                                     <tr key={idx}>
                                         <td className="text-center">{idx + 1}</td>
                                         <td className="text-center">{new Date(line.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-')}</td>
                                         <td>{line.productDetail}</td>
                                         <td className="text-center">{line.quantity}</td>
                                         <td className="text-center">{line.pavtiNo}</td>
+                                        <td className="text-center" style={{ maxWidth: '150px', wordWrap: 'break-word', whiteSpace: 'normal' }}>{line.site || '-'}</td>
                                         <td className="text-center">{line.rate}</td>
                                         <td className="text-right">₹ {line.totalAmount.toLocaleString()}</td>
                                         <td className="text-right">₹ {line.advanceAmount.toLocaleString()}</td>
                                         <td className="text-right">₹ {line.balance.toLocaleString()}</td>
                                     </tr>
                                 ))}
-                                {statementData.lines.length === 0 && (
+                                {(!statementData.lines || statementData.lines.length === 0) && (
                                     <tr>
-                                        <td colSpan="9" className="text-center italic py-4">No records found for this period.</td>
+                                        <td colSpan="10" className="text-center italic py-4">No records found for this period.</td>
                                     </tr>
                                 )}
                             </tbody>
                         </table>
 
                         {/* FOOTER TOTALS */}
-                        {statementData.lines.length > 0 && (
+                        {(statementData.lines && statementData.lines.length > 0) && (
                             <div className="doc-footer mt-4 flex flex-col items-end">
                                 <div className="totals-grid grid grid-cols-2 gap-x-8 gap-y-2 w-full">
                                     <div className="text-center flex items-center justify-center border font-bold h-full">
@@ -283,7 +305,7 @@ export function CustomerStatement() {
                                 <div className="signatory w-full flex justify-between mt-8">
                                     <div className="text-center ml-12">
                                         <p>Authorized Signatory</p>
-                                        <p>JC Bricks Manufacturing</p>
+                                        <p>{compName}</p>
                                     </div>
                                     <div className="mr-12 opacity-0">
                                         <p>Placeholder</p>

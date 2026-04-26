@@ -16,19 +16,20 @@ const db = new Database(dbPath);
 db.exec(`
 
 CREATE TABLE IF NOT EXISTS customers (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  uuid TEXT UNIQUE NOT NULL,
+  uuid TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   phone TEXT NOT NULL,
+  whatsappNumber TEXT,
   email TEXT,
   address TEXT NOT NULL,
   createdAt TEXT,
   updatedAt TEXT,
+  isDeleted INTEGER DEFAULT 0,
   synced INTEGER DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS products (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  uuid TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   category TEXT,
   description TEXT,
@@ -38,12 +39,12 @@ CREATE TABLE IF NOT EXISTS products (
   currentStock INTEGER,
   createdAt TEXT,
   updatedAt TEXT,
+  isDeleted INTEGER DEFAULT 0,
   synced INTEGER DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS invoices (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  uuid TEXT UNIQUE NOT NULL,
+  uuid TEXT PRIMARY KEY,
   pavatiNo TEXT NOT NULL UNIQUE,
   orderNo TEXT,
   date TEXT NOT NULL,
@@ -57,6 +58,7 @@ CREATE TABLE IF NOT EXISTS invoices (
   remarks TEXT,
   createdAt TEXT,
   updatedAt TEXT,
+  isDeleted INTEGER DEFAULT 0,
   synced INTEGER DEFAULT 0
 );
 
@@ -91,10 +93,43 @@ CREATE TABLE IF NOT EXISTS settings (
   setting_key TEXT NOT NULL,
   setting_value TEXT,
   updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  synced INTEGER DEFAULT 0,
   PRIMARY KEY (category, setting_key)
 );
 
 `);
+
+/* Simple migration to add missing columns */
+const tables = ['customers', 'products', 'invoices'];
+tables.forEach(table => {
+  try {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN updatedAt TEXT`);
+  } catch (err) {
+    // Ignore if column already exists
+  }
+  try {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN createdAt TEXT`);
+  } catch (err) {
+    // Ignore if column already exists
+  }
+  try {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN isDeleted INTEGER DEFAULT 0`);
+  } catch (err) {
+    // Ignore if column already exists
+  }
+  try {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN isDeleted INTEGER DEFAULT 0`);
+  } catch (err) {
+    // Ignore if column already exists
+  }
+});
+
+/* Specific migration for whatsappNumber */
+try {
+  db.exec(`ALTER TABLE customers ADD COLUMN whatsappNumber TEXT`);
+} catch (err) {
+  // Ignore if column already exists
+}
 
 /* Export DB */
 export default db;

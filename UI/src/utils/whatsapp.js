@@ -20,7 +20,10 @@ export const shareInvoiceOnWhatsApp = (invoice, phone) => {
         `• ${item.product}: ${item.quantity} units @ ₹${item.rate}`
     ).join('\n');
 
-    const message = `*JC Bricks Manufacturing - Invoice Summary*\n\n` +
+    const companyInfo = JSON.parse(localStorage.getItem('companySettings') || '{}');
+    const compName = companyInfo.name || 'JC Bricks Manufacturing';
+
+    const message = `*${compName} - Invoice Summary*\n\n` +
         `*Pavati No:* ${invoice.pavatiNo}\n` +
         `*Date:* ${new Date(invoice.date).toLocaleDateString('en-IN')}\n` +
         `--------------------------\n` +

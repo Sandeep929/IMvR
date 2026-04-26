@@ -31,8 +31,9 @@ export const syncInvoices = async () => {
           balance: inv.balance,
           marfat: inv.marfat,
           remarks: inv.remarks,
-          createdAt: inv.createdAt,
-          updatedAt: inv.updatedAt
+          createdAt: inv.createdAt || new Date().toISOString(),
+          updatedAt: inv.updatedAt || new Date().toISOString(),
+          isDeleted: inv.isDeleted === 1
         },
         { upsert: true }
       );
@@ -53,15 +54,20 @@ export const syncInvoices = async () => {
     const stateRow = db.prepare(`SELECT lastSync FROM sync_state WHERE entity = 'invoices'`).get();
     let lastSyncTime = stateRow ? new Date(stateRow.lastSync) : new Date(0);
 
-    const updatedInCloud = await Invoice.find({ updatedAt: { $gt: lastSyncTime } });
+    const updatedInCloud = await Invoice.find({
+      $or: [
+        { updatedAt: { $gt: lastSyncTime } },
+        { createdAt: { $gt: lastSyncTime } }
+      ]
+    });
 
     if (updatedInCloud.length > 0) {
       const insertOrUpdateInvoice = db.prepare(`
         INSERT INTO invoices (
           uuid, pavatiNo, orderNo, date, customerName, site, vehicleNo,
-          totalAmount, totalAdvance, balance, marfat, remarks, createdAt, updatedAt, synced
+          totalAmount, totalAdvance, balance, marfat, remarks, createdAt, updatedAt, isDeleted, synced
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
         ON CONFLICT(uuid) DO UPDATE SET
           pavatiNo = excluded.pavatiNo,
           orderNo = excluded.orderNo,
@@ -76,6 +82,7 @@ export const syncInvoices = async () => {
           remarks = excluded.remarks,
           createdAt = excluded.createdAt,
           updatedAt = excluded.updatedAt,
+          isDeleted = excluded.isDeleted,
           synced = 1
       `);
 
@@ -101,7 +108,8 @@ export const syncInvoices = async () => {
             inv.totalAmount || 0, inv.totalAdvance || 0, inv.balance || 0, 
             inv.marfat || '', inv.remarks || '', 
             inv.createdAt ? inv.createdAt.toISOString() : null,
-            inv.updatedAt ? inv.updatedAt.toISOString() : null
+            inv.updatedAt ? inv.updatedAt.toISOString() : null,
+            inv.isDeleted ? 1 : 0
           );
 
           // 2. Replace items

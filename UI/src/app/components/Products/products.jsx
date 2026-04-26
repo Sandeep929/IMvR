@@ -8,7 +8,6 @@ export function Products() {
     const [error, setError] = useState(null);
     const [showForm, setShowForm] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
-    const [filterCategory, setFilterCategory] = useState('all');
     const [filterStock, setFilterStock] = useState('all');
 
     useEffect(() => {
@@ -36,9 +35,8 @@ export function Products() {
 
     const filteredProducts = products.filter(product => {
         const productStockStatus = getStockStatus(product);
-        const matchesCategory = filterCategory === 'all' || product.category === filterCategory;
         const matchesStock = filterStock === 'all' || productStockStatus === filterStock;
-        return matchesCategory && matchesStock;
+        return matchesStock;
     });
 
     const stats = {
@@ -174,16 +172,6 @@ export function Products() {
                 <div className="filter-section">
                     <div className="filter-controls">
                         <select
-                            value={filterCategory}
-                            onChange={(e) => setFilterCategory(e.target.value)}
-                            className="filter-select"
-                        >
-                            <option value="all">All Categories</option>
-                            <option value="Fresh">Fresh Bricks</option>
-                            <option value="Khanjar">Khanjar</option>
-                            <option value="Standard">Standard</option>
-                        </select>
-                        <select
                             value={filterStock}
                             onChange={(e) => setFilterStock(e.target.value)}
                             className="filter-select"
@@ -209,7 +197,6 @@ export function Products() {
                                             </div>
                                             <div>
                                                 <h4 className="product-name">{product.name}</h4>
-                                                <p className="product-category">{product.category}</p>
                                             </div>
                                         </div>
                                         <div className="product-actions">
@@ -288,7 +275,6 @@ export function Products() {
 function ProductForm({ product, onSave, onCancel }) {
     const [formData, setFormData] = useState({
         name: product?.name || '',
-        category: product?.category || 'Standard',
         description: product?.description || '',
         rate: product?.rate || 0,
         unit: product?.unit || 'piece',
@@ -330,7 +316,7 @@ function ProductForm({ product, onSave, onCancel }) {
 
                 <form onSubmit={handleSubmit}>
                     <div className="form-body">
-                        <div className="form-group-grid">
+                        <div className="form-group-grid" style={{ gridTemplateColumns: '1fr' }}>
                             <div>
                                 <label className="form-label">
                                     Product Name <span className="required-star">*</span>
@@ -344,23 +330,6 @@ function ProductForm({ product, onSave, onCancel }) {
                                     className="form-input"
                                     placeholder="Enter product name"
                                 />
-                            </div>
-
-                            <div>
-                                <label className="form-label">
-                                    Category <span className="required-star">*</span>
-                                </label>
-                                <select
-                                    name="category"
-                                    value={formData.category}
-                                    onChange={handleChange}
-                                    required
-                                    className="form-select"
-                                >
-                                    <option value="Fresh">Fresh Bricks</option>
-                                    <option value="Khanjar">Khanjar</option>
-                                    <option value="Standard">Standard</option>
-                                </select>
                             </div>
                         </div>
 

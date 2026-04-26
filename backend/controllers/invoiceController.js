@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 export const getInvoices = (req, res) => {
   try {
     const invoices = db.prepare(`
-      SELECT * FROM invoices
+      SELECT * FROM invoices WHERE isDeleted = 0
       ORDER BY date DESC
     `).all();
 
@@ -17,7 +17,7 @@ export const getInvoices = (req, res) => {
     const fullInvoices = invoices.map(invoice => {
       const items = db.prepare('SELECT * FROM invoice_items WHERE invoiceUuid = ?').all(invoice.uuid);
       const payments = db.prepare('SELECT * FROM invoice_payments WHERE invoiceUuid = ?').all(invoice.uuid);
-      return { ...invoice, items, payments };
+      return { ...invoice, items, payments, id: invoice.uuid, _id: invoice.uuid };
     });
 
     res.json(fullInvoices);
@@ -35,7 +35,7 @@ export const getInvoiceById = (req, res) => {
   try {
     const invoice = db.prepare(`
       SELECT * FROM invoices
-      WHERE id = ?
+      WHERE uuid = ? AND isDeleted = 0
     `).get(req.params.id);
 
     if (!invoice) {
@@ -45,7 +45,7 @@ export const getInvoiceById = (req, res) => {
     const items = db.prepare('SELECT * FROM invoice_items WHERE invoiceUuid = ?').all(invoice.uuid);
     const payments = db.prepare('SELECT * FROM invoice_payments WHERE invoiceUuid = ?').all(invoice.uuid);
 
-    res.json({ ...invoice, items, payments });
+    res.json({ ...invoice, items, payments, id: invoice.uuid, _id: invoice.uuid });
 
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -70,9 +70,9 @@ export const createInvoice = (req, res) => {
       INSERT INTO invoices (
         uuid, pavatiNo, orderNo, date, customerName, site,
         vehicleNo, totalAmount, totalAdvance, balance, 
-        marfat, remarks, createdAt, synced
+        marfat, remarks, createdAt, updatedAt, isDeleted, synced
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
     `);
 
     const insertItem = db.prepare(`
@@ -90,7 +90,7 @@ export const createInvoice = (req, res) => {
       insertInvoice.run(
         uuid, pavatiNo, orderNo, date, customerName, site,
         vehicleNo, totalAmount, totalAdvance, balance,
-        marfat, remarks, new Date().toISOString()
+        marfat, remarks, new Date().toISOString(), new Date().toISOString()
       );
 
       if (items && Array.isArray(items)) {
@@ -112,7 +112,7 @@ export const createInvoice = (req, res) => {
     const newItems = db.prepare('SELECT * FROM invoice_items WHERE invoiceUuid = ?').all(uuid);
     const newPayments = db.prepare('SELECT * FROM invoice_payments WHERE invoiceUuid = ?').all(uuid);
 
-    res.status(201).json({ ...newInvoice, items: newItems, payments: newPayments });
+    res.status(201).json({ ...newInvoice, items: newItems, payments: newPayments, id: newInvoice.uuid, _id: newInvoice.uuid });
 
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -131,7 +131,7 @@ export const updateInvoice = (req, res) => {
   } = req.body;
 
   try {
-    const existing = db.prepare('SELECT uuid FROM invoices WHERE id = ?').get(req.params.id);
+    const existing = db.prepare('SELECT uuid FROM invoices WHERE uuid = ?').get(req.params.id);
     if (!existing) {
       return res.status(404).json({ message: 'Invoice not found' });
     }
@@ -142,8 +142,8 @@ export const updateInvoice = (req, res) => {
         pavatiNo = ?, orderNo = ?, date = ?, customerName = ?,
         site = ?, vehicleNo = ?, totalAmount = ?,
         totalAdvance = ?, balance = ?, marfat = ?,
-        remarks = ?, synced = 0
-      WHERE id = ?
+        remarks = ?, updatedAt = ?, synced = 0
+      WHERE uuid = ?
     `);
 
     const deleteItems = db.prepare('DELETE FROM invoice_items WHERE invoiceUuid = ?');
@@ -162,7 +162,7 @@ export const updateInvoice = (req, res) => {
       updateInvoiceStmt.run(
         pavatiNo, orderNo, date, customerName, site,
         vehicleNo, totalAmount, totalAdvance, balance,
-        marfat, remarks, req.params.id
+        marfat, remarks, new Date().toISOString(), req.params.id
       );
 
       // Re-insert items
@@ -184,11 +184,11 @@ export const updateInvoice = (req, res) => {
 
     transaction();
 
-    const updated = db.prepare('SELECT * FROM invoices WHERE id = ?').get(req.params.id);
+    const updated = db.prepare('SELECT * FROM invoices WHERE uuid = ?').get(req.params.id);
     const updatedItems = db.prepare('SELECT * FROM invoice_items WHERE invoiceUuid = ?').all(uuid);
     const updatedPayments = db.prepare('SELECT * FROM invoice_payments WHERE invoiceUuid = ?').all(uuid);
 
-    res.json({ ...updated, items: updatedItems, payments: updatedPayments });
+    res.json({ ...updated, items: updatedItems, payments: updatedPayments, id: updated.uuid, _id: updated.uuid });
 
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -201,18 +201,12 @@ export const updateInvoice = (req, res) => {
 ================================ */
 export const deleteInvoice = (req, res) => {
   try {
-    const existing = db.prepare('SELECT uuid FROM invoices WHERE id = ?').get(req.params.id);
+    const existing = db.prepare('SELECT uuid FROM invoices WHERE uuid = ?').get(req.params.id);
     if (!existing) {
       return res.status(404).json({ message: 'Invoice not found' });
     }
 
-    const transaction = db.transaction(() => {
-      db.prepare('DELETE FROM invoice_items WHERE invoiceUuid = ?').run(existing.uuid);
-      db.prepare('DELETE FROM invoice_payments WHERE invoiceUuid = ?').run(existing.uuid);
-      db.prepare('DELETE FROM invoices WHERE id = ?').run(req.params.id);
-    });
-
-    transaction();
+    db.prepare('UPDATE invoices SET isDeleted = 1, updatedAt = ?, synced = 0 WHERE uuid = ?').run(new Date().toISOString(), req.params.id);
 
     res.json({ message: 'Invoice deleted' });
 

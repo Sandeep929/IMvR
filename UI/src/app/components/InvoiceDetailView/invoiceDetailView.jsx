@@ -64,6 +64,13 @@ export function InvoiceDetailView({ invoice, onClose }) {
         handlePrint();
     };
 
+    const companyInfo = JSON.parse(localStorage.getItem('companySettings') || '{}');
+    const compName = companyInfo.name || 'JC Bricks Manufacturing';
+    const compAddress = companyInfo.address || 'Village Bisnawda Dhar Road Indore-453001 (M.P.) India';
+    const compPhone = companyInfo.phone || '9826305085, 9926777485';
+    const compWhatsapp = companyInfo.whatsapp || '9977175856';
+    const compEmail = companyInfo.email || 'jcbricksmanufacturing@gmail.com';
+
     // Normalize items — support both new multi-item format and old single-item format
     const items = invoice.items && invoice.items.length > 0
         ? invoice.items
@@ -114,8 +121,8 @@ export function InvoiceDetailView({ invoice, onClose }) {
                             <div className="branding-left">
                                 <img src={logo} alt="logo" className='logo-img' />
                                 <div>
-                                    <h1 className="company-name">JC Bricks Manufacturing</h1>
-                                    <p className="company-address">Village Bisnawda Dhar Road Indore-453001 (M.P.) India</p>
+                                    <h1 className="company-name">{compName}</h1>
+                                    <p className="company-address">{compAddress}</p>
                                 </div>
                             </div>
                             <img src={brickImage} alt="Brick" className="brick-logo" />
@@ -123,11 +130,11 @@ export function InvoiceDetailView({ invoice, onClose }) {
 
                         <div className="contact-info-grid">
                             <div>
-                                <p><strong>Contact No.:</strong> 9826305085, 9926777485</p>
-                                <p><strong>WhatsApp No.:</strong> 9977175856</p>
+                                <p><strong>Contact No.:</strong> {compPhone}</p>
+                                <p><strong>WhatsApp No.:</strong> {compWhatsapp}</p>
                             </div>
                             <div className="contact-right">
-                                <p><strong>Email ID:</strong> jcbricksmanufacturing@gmail.com</p>
+                                <p><strong>Email ID:</strong> {compEmail}</p>
                                 <p style={{ marginTop: '0.5rem' }}>
                                     <strong>Date:</strong> {new Date(invoice.date).toLocaleDateString('en-GB', {
                                         day: '2-digit',
@@ -215,7 +222,7 @@ export function InvoiceDetailView({ invoice, onClose }) {
                             <p style={{ marginBottom: '0.5rem' }}><strong>Total Quantity = {items.reduce((s, i) => s + Number(i.quantity), 0)}</strong></p>
                             <div className="signature-box">
                                 <p>Authorized Signatory</p>
-                                <p>JC Bricks Manufacturing</p>
+                                <p>{compName}</p>
                             </div>
                         </div>
 

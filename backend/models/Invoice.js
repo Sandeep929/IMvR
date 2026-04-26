@@ -27,6 +27,7 @@ const invoiceSchema = new mongoose.Schema({
     remarks: { type: String },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
+    isDeleted: { type: Boolean, default: false }
 });
 
 invoiceSchema.pre('save', function(next) {

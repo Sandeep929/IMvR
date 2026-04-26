@@ -13,9 +13,10 @@ import { InvoiceDetailView } from './components/InvoiceDetailView/invoiceDetailV
 import { CustomerStatement } from './components/CustomerStatement/CustomerStatement';
 import '../styles/theme.css';
 import './App.css';
+import { settingsAPI } from '../services/api';
 
 export default function App() {
-    const [activeTab, setActiveTab] = useState('dashboard');
+    const [activeTab, setActiveTab] = useState(localStorage.getItem('activeTab') || 'dashboard');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
 
@@ -25,27 +26,57 @@ export default function App() {
         localStorage.setItem('theme', theme);
     }, [theme]);
 
+    // Save active tab
+    useEffect(() => {
+        localStorage.setItem('activeTab', activeTab);
+    }, [activeTab]);
+
     const toggleTheme = () => {
         setTheme(prev => prev === 'light' ? 'dark' : 'light');
     };
 
-    // Check if user is already logged in
+    // Check if user is already logged in and fetch fresh settings
     useEffect(() => {
         const authStatus = localStorage.getItem('isAuthenticated');
         if (authStatus === 'true') {
             setIsAuthenticated(true);
+            settingsAPI.getSettings().then(res => {
+                if (res.data && res.data.company) {
+                    localStorage.setItem('companySettings', JSON.stringify(res.data.company));
+                }
+            }).catch(console.error);
         }
     }, []);
 
-    const handleLogin = (username, password) => {
-        // Simple demo authentication - in production, this would call an API
-        if (username === 'admin' && password === 'admin123') {
-            setIsAuthenticated(true);
-            localStorage.setItem('isAuthenticated', 'true');
-            localStorage.setItem('username', username);
-            return true;
+    const handleLogin = async (username, password) => {
+        try {
+            const res = await settingsAPI.getSettings();
+            const data = res.data;
+            
+            const adminUser = data?.user?.username || 'admin';
+            const adminPass = data?.user?.password || 'admin123';
+
+            if (username === adminUser && password === adminPass) {
+                if (data.company) {
+                    localStorage.setItem('companySettings', JSON.stringify(data.company));
+                }
+                setIsAuthenticated(true);
+                localStorage.setItem('isAuthenticated', 'true');
+                localStorage.setItem('username', username);
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Failed to authenticate against server settings, falling back to local credentials.', error);
+            // Fallback if backend is unavailable temporarily
+            if (username === 'admin' && password === 'admin123') {
+                setIsAuthenticated(true);
+                localStorage.setItem('isAuthenticated', 'true');
+                localStorage.setItem('username', username);
+                return true;
+            }
+            return false;
         }
-        return false;
     };
 
     const handleLogout = () => {

@@ -10,13 +10,13 @@ export const getReportData = (req, res) => {
 
     const { days } = req.query;
 
-    let query = `SELECT * FROM invoices`;
+    let query = `SELECT * FROM invoices WHERE isDeleted = 0`;
     const params = [];
 
     if (days) {
       const pastDate = new Date();
       pastDate.setDate(pastDate.getDate() - parseInt(days, 10));
-      query += ` WHERE date >= ?`;
+      query += ` AND date >= ?`;
       params.push(pastDate.toISOString());
     }
 
@@ -164,7 +164,7 @@ export const getCustomerStatement = (req, res) => {
       return res.status(400).json({ message: 'customerName is required' });
     }
 
-    let query = `SELECT * FROM invoices WHERE customerName = ?`;
+    let query = `SELECT * FROM invoices WHERE customerName = ? AND isDeleted = 0`;
     const params = [customerName];
 
     if (startDate && endDate) {
@@ -185,7 +185,7 @@ export const getCustomerStatement = (req, res) => {
     if (invoices.length === 0) {
       return res.json({ 
         customerName, 
-        invoices: [], 
+        lines: [], 
         summary: { totalBricks: 0, totalAmount: 0, deposit: 0, totalBalance: 0 } 
       });
     }
@@ -228,6 +228,7 @@ export const getCustomerStatement = (req, res) => {
         productDetail: primaryProduct, // simplified to first product for the grid row
         quantity: totalQuantity,
         pavtiNo: inv.pavatiNo,
+        site: inv.site,
         rate: productLines.length > 0 ? productLines[0].rate : 0,
         totalAmount: inv.totalAmount > 0 ? inv.totalAmount : invAmount,
         advanceAmount: inv.totalAdvance || 0,
@@ -264,31 +265,36 @@ export const getMasterData = (req, res) => {
   try {
     const { customerName, startDate, endDate } = req.query;
 
-    let query = `SELECT * FROM invoices`;
+    let query = `
+      SELECT i.*, c.phone as customerPhone 
+      FROM invoices i
+      LEFT JOIN customers c ON i.customerName = c.name
+      WHERE i.isDeleted = 0
+    `;
     const params = [];
     const conditions = [];
 
     if (customerName) {
-      conditions.push(`customerName = ?`);
+      conditions.push(`i.customerName = ?`);
       params.push(customerName);
     }
 
     if (startDate && endDate) {
-      conditions.push(`date BETWEEN ? AND ?`);
+      conditions.push(`i.date BETWEEN ? AND ?`);
       params.push(startDate, endDate);
     } else if (startDate) {
-      conditions.push(`date >= ?`);
+      conditions.push(`i.date >= ?`);
       params.push(startDate);
     } else if (endDate) {
-      conditions.push(`date <= ?`);
+      conditions.push(`i.date <= ?`);
       params.push(endDate);
     }
 
     if (conditions.length > 0) {
-      query += ` WHERE ` + conditions.join(' AND ');
+      query += ` AND ` + conditions.join(' AND ');
     }
 
-    query += ` ORDER BY date DESC`;
+    query += ` ORDER BY i.date DESC`;
 
     const invoices = db.prepare(query).all(...params);
 

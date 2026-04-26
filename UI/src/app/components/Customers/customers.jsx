@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, Edit, Trash2, Phone, MapPin, FileText, IndianRupee, TrendingUp, User, X, Loader2, Download, Filter, AlertCircle } from 'lucide-react';
+import { Plus, Edit, Trash2, Phone, MapPin, FileText, IndianRupee, TrendingUp, User, X, Loader2, Download, Filter, AlertCircle, MessageCircle } from 'lucide-react';
 import { customerAPI, invoiceAPI } from '@/services/api';
 import './customers.css';
 
@@ -82,10 +82,11 @@ export function Customers() {
             });
         }
 
-        const headers = ['Name', 'Phone', 'Email', 'Address', 'Total Invoices', 'Products Ordered', 'Total Amount (₹)', 'Total Paid (₹)', 'Balance Due (₹)', 'Last Invoice Date'];
+        const headers = ['Name', 'Phone', 'WhatsApp', 'Email', 'Address', 'Total Invoices', 'Products Ordered', 'Total Amount (₹)', 'Total Paid (₹)', 'Balance Due (₹)', 'Last Invoice Date'];
         const rows = dataToExport.map(c => [
             `"${c.name || ''}"`,
             `"${c.phone || ''}"`,
+            `"${c.whatsappNumber || ''}"`,
             `"${c.email || ''}"`,
             `"${(c.address || '').replace(/"/g, '""')}"`,
             c.totalInvoices,
@@ -353,6 +354,12 @@ export function Customers() {
                                             <Phone size={14} className="cell-icon" />
                                             {customer.phone}
                                         </div>
+                                        {customer.whatsappNumber && (
+                                            <div className="contact-cell" style={{marginTop: '4px'}}>
+                                                <MessageCircle size={14} className="cell-icon" style={{color: '#25D366'}} />
+                                                {customer.whatsappNumber}
+                                            </div>
+                                        )}
                                     </td>
                                     <td>
                                         <div className="address-cell">
@@ -431,6 +438,7 @@ function CustomerForm({ customer, onSave, onCancel }) {
     const [formData, setFormData] = useState({
         name: customer?.name || '',
         phone: customer?.phone || '',
+        whatsappNumber: customer?.whatsappNumber || '',
         email: customer?.email || '',
         address: customer?.address || ''
     });
@@ -489,29 +497,43 @@ function CustomerForm({ customer, onSave, onCancel }) {
                                     Phone Number <span className="required-star">*</span>
                                 </label>
                                 <input
-                                    type="tel"
+                                    type="text"
                                     name="phone"
                                     value={formData.phone}
                                     onChange={handleChange}
                                     required
                                     className="form-input"
-                                    placeholder="Enter phone number"
+                                    placeholder="Enter phone number(s)"
                                 />
                             </div>
 
                             <div>
                                 <label className="form-label">
-                                    Email Address
+                                    WhatsApp Number
                                 </label>
                                 <input
-                                    type="email"
-                                    name="email"
-                                    value={formData.email}
+                                    type="text"
+                                    name="whatsappNumber"
+                                    value={formData.whatsappNumber}
                                     onChange={handleChange}
                                     className="form-input"
-                                    placeholder="Enter email address"
+                                    placeholder="Enter WhatsApp parameter"
                                 />
                             </div>
+                        </div>
+
+                        <div style={{ marginTop: '1rem' }}>
+                            <label className="form-label">
+                                Email Address
+                            </label>
+                            <input
+                                type="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                className="form-input"
+                                placeholder="Enter email address"
+                            />
                         </div>
 
                         <div>

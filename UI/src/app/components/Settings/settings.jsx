@@ -61,6 +61,7 @@ export function Settings() {
     const handleCompanySubmit = (e) => {
         e.preventDefault();
         handleSaveSettings('company', companyInfo);
+        localStorage.setItem('companySettings', JSON.stringify(companyInfo));
     };
 
     const handleUserSubmit = (e) => {
@@ -70,9 +71,20 @@ export function Settings() {
             return;
         }
         
-        // Exclude passwords from general settings save for security in a real app,
-        // but for this demo scale we'll save the whole user obj.
-        handleSaveSettings('user', userSettings);
+        const updatedSettings = { ...userSettings };
+        if (userSettings.newPassword) {
+            updatedSettings.password = userSettings.newPassword;
+        } else if (!updatedSettings.password && userSettings.currentPassword) {
+             // Fallback to explicitly save original if no new password is set
+            updatedSettings.password = userSettings.currentPassword;
+        }
+        
+        // Clear fields so they don't persist locally awkwardly
+        updatedSettings.currentPassword = '';
+        updatedSettings.newPassword = '';
+        updatedSettings.confirmPassword = '';
+        
+        handleSaveSettings('user', updatedSettings);
     };
 
     const handleInvoiceSubmit = (e) => {

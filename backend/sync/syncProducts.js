@@ -9,15 +9,7 @@ export const syncProducts = async () => {
   `).all();
 
   for (const p of unsynced) {
-    // If a product has no UUID (legacy), generate one and save it safely
     let prodUuid = p.uuid;
-    if (!prodUuid) {
-        prodUuid = uuidv4();
-        // Since sqlite products schema doesn't have uuid yet, we alter it on the fly if needed
-        try { db.exec('ALTER TABLE products ADD COLUMN uuid TEXT UNIQUE'); } catch (e) {}
-        db.prepare('UPDATE products SET uuid = ? WHERE id = ?').run(prodUuid, p.id);
-    }
-
     try {
       await Product.updateOne(
         { uuid: prodUuid },
@@ -30,17 +22,18 @@ export const syncProducts = async () => {
           unit: p.unit,
           minStock: p.minStock,
           currentStock: p.currentStock,
-          createdAt: p.createdAt,
-          updatedAt: p.updatedAt
+          createdAt: p.createdAt || new Date().toISOString(),
+          updatedAt: p.updatedAt || new Date().toISOString(),
+          isDeleted: p.isDeleted === 1
         },
         { upsert: true }
       );
 
       db.prepare(`
-        UPDATE products SET synced = 1 WHERE id = ?
-      `).run(p.id);
+        UPDATE products SET synced = 1 WHERE uuid = ?
+      `).run(p.uuid);
     } catch (err) {
-      console.error('Error pushing product:', p.id, err);
+      console.error('Error pushing product:', p.uuid, err);
     }
   }
 
@@ -51,15 +44,17 @@ export const syncProducts = async () => {
     const stateRow = db.prepare(`SELECT lastSync FROM sync_state WHERE entity = 'products'`).get();
     let lastSyncTime = stateRow ? new Date(stateRow.lastSync) : new Date(0);
 
-    const updatedInCloud = await Product.find({ updatedAt: { $gt: lastSyncTime } });
+    const updatedInCloud = await Product.find({
+      $or: [
+        { updatedAt: { $gt: lastSyncTime } },
+        { createdAt: { $gt: lastSyncTime } }
+      ]
+    });
 
     if (updatedInCloud.length > 0) {
-      // Ensure uuid column exists for pull
-      try { db.exec('ALTER TABLE products ADD COLUMN uuid TEXT UNIQUE'); } catch (e) {}
-
       const insertOrUpdate = db.prepare(`
-        INSERT INTO products (uuid, name, category, description, rate, unit, minStock, currentStock, createdAt, updatedAt, synced)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+        INSERT INTO products (uuid, name, category, description, rate, unit, minStock, currentStock, createdAt, updatedAt, isDeleted, synced)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
         ON CONFLICT(uuid) DO UPDATE SET
           name = excluded.name,
           category = excluded.category,
@@ -70,6 +65,7 @@ export const syncProducts = async () => {
           currentStock = excluded.currentStock,
           createdAt = excluded.createdAt,
           updatedAt = excluded.updatedAt,
+          isDeleted = excluded.isDeleted,
           synced = 1
       `);
 
@@ -80,7 +76,8 @@ export const syncProducts = async () => {
           insertOrUpdate.run(
             p.uuid, p.name, p.category, p.description, p.rate, p.unit, p.minStock, p.currentStock,
             p.createdAt ? p.createdAt.toISOString() : null,
-            p.updatedAt ? p.updatedAt.toISOString() : null
+            p.updatedAt ? p.updatedAt.toISOString() : null,
+            p.isDeleted ? 1 : 0
           );
         }
       });
