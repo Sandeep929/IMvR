@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, FileText, Users, Package, BarChart3, Settings } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Package, BarChart3, Settings, FlaskConical } from 'lucide-react';
 import './sidebar.css';
 import logo from "../../../assets/Gemini_Generated_Image_98lfx498lfx498lf.png";
 
@@ -14,6 +14,7 @@ export function Sidebar({ activeTab, setActiveTab }) {
         { id: 'customers', icon: Users, label: 'Customers' },
         { id: 'products', icon: Package, label: 'Products' },
         { id: 'statements', icon: FileText, label: 'Statements' },
+        { id: 'rawMaterials', icon: FlaskConical, label: 'Raw Materials' },
         { id: 'reports', icon: BarChart3, label: 'Reports' },
         { id: 'settings', icon: Settings, label: 'Settings' },
     ];

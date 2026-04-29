@@ -4,6 +4,7 @@ import { syncCustomers } from './syncCustomers.js';
 import { syncProducts } from './syncProducts.js';
 import { syncInvoices } from './syncInvoices.js';
 import { syncSettings } from './syncSettings.js';
+import { syncRawMaterials } from './syncRawMaterials.js';
 
 export const startAutoSync = () => {
 
@@ -17,6 +18,7 @@ export const startAutoSync = () => {
       await syncProducts();
       await syncInvoices();
       await syncSettings();
+      await syncRawMaterials();
 
       console.log("Sync complete ✔");
 

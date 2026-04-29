@@ -11,6 +11,7 @@ import { Settings } from './components/Settings/settings';
 import { InvoiceForm } from './components/InvoiceForm/invoiceForm';
 import { InvoiceDetailView } from './components/InvoiceDetailView/invoiceDetailView';
 import { CustomerStatement } from './components/CustomerStatement/CustomerStatement';
+import { RawMaterials } from './components/RawMaterials/rawMaterials';
 import '../styles/theme.css';
 import './App.css';
 import { settingsAPI } from '../services/api';
@@ -52,7 +53,7 @@ export default function App() {
         try {
             const res = await settingsAPI.getSettings();
             const data = res.data;
-            
+
             const adminUser = data?.user?.username || 'admin';
             const adminPass = data?.user?.password || 'admin123';
 
@@ -105,6 +106,8 @@ export default function App() {
                 return 'Reports';
             case 'statements':
                 return 'Customer Statements';
+            case 'rawMaterials':
+                return 'Raw Material Expenses';
             case 'settings':
                 return 'Settings';
             default:
@@ -126,6 +129,8 @@ export default function App() {
                 return <Reports />;
             case 'statements':
                 return <CustomerStatement />;
+            case 'rawMaterials':
+                return <RawMaterials />;
             case 'settings':
                 return <Settings />;
             default:

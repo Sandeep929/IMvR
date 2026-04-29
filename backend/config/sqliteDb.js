@@ -97,6 +97,32 @@ CREATE TABLE IF NOT EXISTS settings (
   PRIMARY KEY (category, setting_key)
 );
 
+CREATE TABLE IF NOT EXISTS raw_materials (
+  uuid TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  unit TEXT,
+  currentStock REAL DEFAULT 0,
+  createdAt TEXT,
+  updatedAt TEXT,
+  isDeleted INTEGER DEFAULT 0,
+  synced INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS raw_material_expenses (
+  uuid TEXT PRIMARY KEY,
+  date TEXT NOT NULL,
+  materialName TEXT NOT NULL,
+  quantity REAL NOT NULL,
+  rate REAL NOT NULL,
+  supplier TEXT,
+  totalCost REAL NOT NULL,
+  notes TEXT,
+  createdAt TEXT,
+  updatedAt TEXT,
+  isDeleted INTEGER DEFAULT 0,
+  synced INTEGER DEFAULT 0
+);
+
 `);
 
 /* Simple migration to add missing columns */

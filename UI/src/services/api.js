@@ -54,4 +54,14 @@ export const settingsAPI = {
     updateSettings: (data) => api.post('/settings', data)
 };
 
+// ─── Raw Materials ──────────────────────────────────────────
+export const rawMaterialAPI = {
+    getExpenses: () => api.get('/raw-materials/expenses'),
+    createExpense: (data) => api.post('/raw-materials/expenses', data),
+    updateExpense: (id, data) => api.put(`/raw-materials/expenses/${id}`, data),
+    deleteExpense: (id) => api.delete(`/raw-materials/expenses/${id}`),
+    updateQuantity: (id, data) => api.put(`/raw-materials/expenses/${id}/quantity`, data),
+    getAnalytics: (params) => api.get('/raw-materials/analytics', { params }),
+};
+
 export default api;
