@@ -255,17 +255,12 @@
 
 .error-message {
   margin-bottom: 1.5rem;
-  /* mb-6 */
   padding: 1rem;
-  /* p-4 */
-  background-color: #fef2f2;
-  /* bg-red-50 */
+  background-color: rgba(239, 68, 68, 0.12);
   border-left: 4px solid #ef4444;
-  /* border-red-500 */
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
-  /* gap-3 */
 }
 
 .error-icon {
@@ -405,8 +400,7 @@
 }
 
 .demo-label {
-  color: #334155;
-  /* text-slate-700 */
+  color: var(--text-muted);
 }
 
 .demo-code {

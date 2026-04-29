@@ -17,7 +17,7 @@ import './App.css';
 import { settingsAPI } from '../services/api';
 
 export default function App() {
-    const [activeTab, setActiveTab] = useState(localStorage.getItem('activeTab') || 'dashboard');
+    const [activeTab, setActiveTab] = useState('dashboard');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
 

@@ -195,9 +195,7 @@
 
 .table-header {
     padding: 1rem 1.5rem;
-    /* px-6 py-4 */
-    border-bottom: 1px solid #e2e8f0;
-    /* border-slate-200 */
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -367,12 +365,9 @@
 /* Payment Status Overview */
 .payment-overview {
     margin-top: 1.5rem;
-    /* mt-6 */
-    background-color: #ffffff;
-    border: 1px solid #e2e8f0;
-    /* border-slate-200 */
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
     padding: 1.5rem;
-    /* p-6 */
 }
 
 .overview-title {
