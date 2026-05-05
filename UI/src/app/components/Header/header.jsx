@@ -1,9 +1,23 @@
-import React from 'react';
-import { Bell, Search, User, LogOut, Sun, Moon } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Bell, Search, User, LogOut, Sun, Moon, Wifi, WifiOff } from 'lucide-react';
 import './header.css';
 
 export function Header({ title, onLogout, theme, toggleTheme }) {
     const username = localStorage.getItem('username') || 'Admin';
+    const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+    useEffect(() => {
+        const handleOnline = () => setIsOnline(true);
+        const handleOffline = () => setIsOnline(false);
+
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+        };
+    }, []);
 
     return (
         <div className="header-container">
@@ -42,6 +56,25 @@ export function Header({ title, onLogout, theme, toggleTheme }) {
                         <Bell size={20} className="notification-icon" />
                         <span className="notification-badge"></span>
                     </button> */}
+
+                    <div 
+                        className="online-indicator" 
+                        title={isOnline ? 'System is online and syncing' : 'System is offline - changes saved locally'}
+                        style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '6px', 
+                            marginRight: '12px', 
+                            padding: '6px 10px',
+                            borderRadius: '20px',
+                            backgroundColor: isOnline ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                            color: isOnline ? '#10b981' : '#ef4444',
+                            transition: 'all 0.3s ease'
+                        }}
+                    >
+                        {isOnline ? <Wifi size={16} /> : <WifiOff size={16} />}
+                        <span style={{ fontSize: '13px', fontWeight: 600 }}>{isOnline ? 'Online' : 'Offline'}</span>
+                    </div>
 
                     <div className="user-profile">
                         <div className="user-avatar">

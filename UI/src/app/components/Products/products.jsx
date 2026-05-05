@@ -276,17 +276,23 @@ function ProductForm({ product, onSave, onCancel }) {
     const [formData, setFormData] = useState({
         name: product?.name || '',
         description: product?.description || '',
-        rate: product?.rate || 0,
+        rate: product?.rate ?? '',
         unit: product?.unit || 'piece',
-        minStock: product?.minStock || 10000,
-        currentStock: product?.currentStock || 0
+        minStock: product?.minStock ?? '',
+        currentStock: product?.currentStock ?? ''
     });
     const [saving, setSaving] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSaving(true);
-        await onSave(formData);
+        const dataToSave = {
+            ...formData,
+            rate: parseFloat(formData.rate) || 0,
+            minStock: parseFloat(formData.minStock) || 0,
+            currentStock: parseFloat(formData.currentStock) || 0
+        };
+        await onSave(dataToSave);
         setSaving(false);
     };
 
@@ -294,7 +300,7 @@ function ProductForm({ product, onSave, onCancel }) {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
-            [name]: ['rate', 'minStock', 'currentStock'].includes(name) ? parseFloat(value) || 0 : value
+            [name]: value
         }));
     };
 

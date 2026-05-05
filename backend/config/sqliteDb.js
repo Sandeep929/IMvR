@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS products (
 
 CREATE TABLE IF NOT EXISTS invoices (
   uuid TEXT PRIMARY KEY,
-  pavatiNo TEXT NOT NULL UNIQUE,
+  pavatiNo TEXT NOT NULL,
   orderNo TEXT,
   date TEXT NOT NULL,
   customerName TEXT NOT NULL,
@@ -155,6 +155,39 @@ try {
   db.exec(`ALTER TABLE customers ADD COLUMN whatsappNumber TEXT`);
 } catch (err) {
   // Ignore if column already exists
+}
+
+/* Remove UNIQUE constraint from pavatiNo */
+try {
+  const invoicesTableInfo = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='invoices'").get();
+  if (invoicesTableInfo && invoicesTableInfo.sql.includes('UNIQUE')) {
+    console.log("Migrating invoices table to remove UNIQUE constraint on pavatiNo...");
+    db.exec(`
+      CREATE TABLE invoices_new (
+        uuid TEXT PRIMARY KEY,
+        pavatiNo TEXT NOT NULL,
+        orderNo TEXT,
+        date TEXT NOT NULL,
+        customerName TEXT NOT NULL,
+        site TEXT,
+        vehicleNo TEXT,
+        totalAmount REAL NOT NULL DEFAULT 0,
+        totalAdvance REAL NOT NULL DEFAULT 0,
+        balance REAL NOT NULL DEFAULT 0,
+        marfat TEXT,
+        remarks TEXT,
+        createdAt TEXT,
+        updatedAt TEXT,
+        isDeleted INTEGER DEFAULT 0,
+        synced INTEGER DEFAULT 0
+      );
+      INSERT INTO invoices_new SELECT * FROM invoices;
+      DROP TABLE invoices;
+      ALTER TABLE invoices_new RENAME TO invoices;
+    `);
+  }
+} catch (err) {
+  console.error("Failed to migrate invoices table:", err);
 }
 
 /* Export DB */
