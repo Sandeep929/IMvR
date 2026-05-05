@@ -5,53 +5,71 @@ export const getReportData = (req, res) => {
   try {
 
     /* ===============================
-       Fetch invoices + items from SQLite
+       Date windows from query param
     =============================== */
 
     const { days } = req.query;
+    const daysInt  = days ? parseInt(days, 10) : null;
 
-    let query = `SELECT * FROM invoices WHERE isDeleted = 0`;
+    // Current period start
+    const now         = new Date();
+    const periodStart = daysInt ? new Date(now.getTime() - daysInt * 86400000) : null;
+
+    // Previous period window (equal length, immediately before current period)
+    const prevStart   = daysInt ? new Date(now.getTime() - 2 * daysInt * 86400000) : null;
+    const prevEnd     = periodStart; // exclusive upper bound
+
+
+    /* ===============================
+       Fetch current-period invoices
+    =============================== */
+
+    let query  = `SELECT * FROM invoices WHERE isDeleted = 0`;
     const params = [];
 
-    if (days) {
-      const pastDate = new Date();
-      pastDate.setDate(pastDate.getDate() - parseInt(days, 10));
+    if (periodStart) {
       query += ` AND date >= ?`;
-      params.push(pastDate.toISOString());
+      params.push(periodStart.toISOString());
     }
 
     query += ` ORDER BY date DESC`;
     const invoices = db.prepare(query).all(...params);
 
-    // Attach items and payments to each invoice
     const fullInvoices = invoices.map(inv => {
-      const items = db.prepare('SELECT * FROM invoice_items WHERE invoiceUuid = ?').all(inv.uuid);
+      const items    = db.prepare('SELECT * FROM invoice_items    WHERE invoiceUuid = ?').all(inv.uuid);
       const payments = db.prepare('SELECT * FROM invoice_payments WHERE invoiceUuid = ?').all(inv.uuid);
       return { ...inv, items, payments };
     });
 
 
     /* ===============================
-       Monthly revenue data
+       Fetch PREVIOUS period invoices (for comparison)
+    =============================== */
+
+    let prevInvoices = [];
+    if (prevStart && prevEnd) {
+      prevInvoices = db.prepare(`
+        SELECT * FROM invoices
+        WHERE isDeleted = 0 AND date >= ? AND date < ?
+      `).all(prevStart.toISOString(), prevEnd.toISOString());
+    }
+
+
+    /* ===============================
+       Monthly revenue data (for table)
     =============================== */
 
     const monthlyData = {};
 
     fullInvoices.forEach(inv => {
       const date = new Date(inv.date);
-
-      const key =
-        `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const key  = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
       if (!monthlyData[key]) {
-        monthlyData[key] = {
-          month: key,
-          revenue: 0,
-          invoiceCount: 0
-        };
+        monthlyData[key] = { month: key, revenue: 0, invoiceCount: 0 };
       }
 
-      monthlyData[key].revenue += inv.totalAmount || 0;
+      monthlyData[key].revenue      += inv.totalAmount || 0;
       monthlyData[key].invoiceCount += 1;
     });
 
@@ -67,18 +85,11 @@ export const getReportData = (req, res) => {
 
     fullInvoices.forEach(inv => {
       const name = inv.customerName;
-
       if (!customerData[name]) {
-        customerData[name] = {
-          name,
-          totalAmount: 0,
-          totalBalance: 0,
-          invoiceCount: 0
-        };
+        customerData[name] = { name, totalAmount: 0, totalBalance: 0, invoiceCount: 0 };
       }
-
-      customerData[name].totalAmount += inv.totalAmount || 0;
-      customerData[name].totalBalance += inv.balance || 0;
+      customerData[name].totalAmount  += inv.totalAmount || 0;
+      customerData[name].totalBalance += inv.balance     || 0;
       customerData[name].invoiceCount += 1;
     });
 
@@ -87,7 +98,7 @@ export const getReportData = (req, res) => {
 
 
     /* ===============================
-       Product-wise breakdown (from invoice_items)
+       Product-wise breakdown
     =============================== */
 
     const productData = {};
@@ -95,19 +106,12 @@ export const getReportData = (req, res) => {
     fullInvoices.forEach(inv => {
       (inv.items || []).forEach(item => {
         const product = item.product;
-
         if (!productData[product]) {
-          productData[product] = {
-            name: product,
-            totalQuantity: 0,
-            totalAmount: 0,
-            invoiceCount: 0
-          };
+          productData[product] = { name: product, totalQuantity: 0, totalAmount: 0, invoiceCount: 0 };
         }
-
         productData[product].totalQuantity += item.quantity || 0;
-        productData[product].totalAmount += item.amount || 0;
-        productData[product].invoiceCount += 1;
+        productData[product].totalAmount   += item.amount   || 0;
+        productData[product].invoiceCount  += 1;
       });
     });
 
@@ -116,20 +120,37 @@ export const getReportData = (req, res) => {
 
 
     /* ===============================
-       Overall summary
+       Current period summary
     =============================== */
 
-    const totalRevenue = fullInvoices.reduce(
-      (sum, inv) => sum + (inv.totalAmount || 0), 0
-    );
+    const totalRevenue   = fullInvoices.reduce((s, i) => s + (i.totalAmount  || 0), 0);
+    const totalBalance   = fullInvoices.reduce((s, i) => s + (i.balance      || 0), 0);
+    const totalCollected = fullInvoices.reduce((s, i) => s + (i.totalAdvance || 0), 0);
+    const totalInvoices  = fullInvoices.length;
+    const avgInvoiceVal  = totalInvoices > 0 ? totalRevenue / totalInvoices : 0;
 
-    const totalBalance = fullInvoices.reduce(
-      (sum, inv) => sum + (inv.balance || 0), 0
-    );
 
-    const totalCollected = fullInvoices.reduce(
-      (sum, inv) => sum + (inv.totalAdvance || 0), 0
-    );
+    /* ===============================
+       Previous period summary + growth %
+    =============================== */
+
+    const prevRevenue   = prevInvoices.reduce((s, i) => s + (i.totalAmount  || 0), 0);
+    const prevBalance   = prevInvoices.reduce((s, i) => s + (i.balance      || 0), 0);
+    const prevCount     = prevInvoices.length;
+    const prevAvgVal    = prevCount > 0 ? prevRevenue / prevCount : 0;
+
+    const pct = (curr, prev) => {
+      if (prev > 0)    return parseFloat(((curr - prev) / prev * 100).toFixed(1));
+      if (curr > 0)    return 'new'; // no previous data
+      return 0;
+    };
+
+    const revenueGrowth = pct(totalRevenue, prevRevenue);
+    const invoiceGrowth = pct(totalInvoices, prevCount);
+    const avgGrowth     = pct(avgInvoiceVal, prevAvgVal);
+
+    const periodLabel     = daysInt ? `Last ${daysInt} days` : 'All time';
+    const prevPeriodLabel = daysInt ? `Prev ${daysInt} days` : '';
 
 
     /* ===============================
@@ -144,7 +165,18 @@ export const getReportData = (req, res) => {
         totalRevenue,
         totalBalance,
         totalCollected,
-        totalInvoices: fullInvoices.length
+        totalInvoices,
+        avgInvoiceVal: Math.round(avgInvoiceVal),
+
+        // Comparison
+        revenueGrowth,
+        invoiceGrowth,
+        avgGrowth,
+        prevRevenue,
+        prevBalance,
+        prevCount,
+        periodLabel,
+        prevPeriodLabel,
       }
     });
 
@@ -152,6 +184,7 @@ export const getReportData = (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 /* ===============================
    Get Customer Statement (Invoice Group)
@@ -164,18 +197,23 @@ export const getCustomerStatement = (req, res) => {
       return res.status(400).json({ message: 'customerName is required' });
     }
 
+    let qEndDate = endDate;
+    if (qEndDate && qEndDate.length === 10) {
+      qEndDate += 'T23:59:59.999Z';
+    }
+
     let query = `SELECT * FROM invoices WHERE customerName = ? AND isDeleted = 0`;
     const params = [customerName];
 
     if (startDate && endDate) {
       query += ` AND date BETWEEN ? AND ?`;
-      params.push(startDate, endDate);
+      params.push(startDate, qEndDate);
     } else if (startDate) {
       query += ` AND date >= ?`;
       params.push(startDate);
     } else if (endDate) {
       query += ` AND date <= ?`;
-      params.push(endDate);
+      params.push(qEndDate);
     }
 
     query += ` ORDER BY date ASC`;
@@ -274,6 +312,11 @@ export const getMasterData = (req, res) => {
     const params = [];
     const conditions = [];
 
+    let qEndDate = endDate;
+    if (qEndDate && qEndDate.length === 10) {
+      qEndDate += 'T23:59:59.999Z';
+    }
+
     if (customerName) {
       conditions.push(`i.customerName = ?`);
       params.push(customerName);
@@ -281,13 +324,13 @@ export const getMasterData = (req, res) => {
 
     if (startDate && endDate) {
       conditions.push(`i.date BETWEEN ? AND ?`);
-      params.push(startDate, endDate);
+      params.push(startDate, qEndDate);
     } else if (startDate) {
       conditions.push(`i.date >= ?`);
       params.push(startDate);
     } else if (endDate) {
       conditions.push(`i.date <= ?`);
-      params.push(endDate);
+      params.push(qEndDate);
     }
 
     if (conditions.length > 0) {

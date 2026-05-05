@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, TrendingUp, IndianRupee, FileText, Users, Loader2 } from 'lucide-react';
+import { TrendingUp, IndianRupee, FileText, Users, ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react';
 import { reportAPI } from '@/services/api';
 import './reports.css';
 
@@ -26,8 +26,6 @@ export function Reports() {
         }
     };
 
-
-
     if (loading) {
         return (
             <div className="reports-container">
@@ -52,12 +50,26 @@ export function Reports() {
 
     const { summary, topCustomers, monthlyReport } = data || {};
 
+    /* ─── Growth values from backend (based on selected filter) ─── */
+    const parseGrowth = (v) => (v === 'new' || v === undefined || v === null) ? v : parseFloat(v);
+    const revenueGrowth  = parseGrowth(summary?.revenueGrowth);
+    const invoiceGrowth  = parseGrowth(summary?.invoiceGrowth);
+    const avgGrowth      = parseGrowth(summary?.avgGrowth);
+    const prevPeriodLabel = summary?.prevPeriodLabel || 'previous period';
+    const hasPrevData    = (summary?.prevRevenue || 0) > 0 || (summary?.prevCount || 0) > 0;
+
+    /* ─── Helper ─── */
+    const fmtPct = (val) => val === 'new' ? 'New' : `${val > 0 ? '+' : ''}${parseFloat(val).toFixed(1)}%`;
+    const TrendIcon = ({ val }) => val === 'new' || val >= 0
+        ? <ArrowUpRight size={12} style={{ display: 'inline' }} />
+        : <ArrowDownRight size={12} style={{ display: 'inline' }} />;
+
     return (
         <div className="reports-container">
             <div className="reports-header-card">
                 <div className="header-content">
                     <div className="header-text">
-                        <h3>Business Analytics & Reports</h3>
+                        <h3>Business Analytics &amp; Reports</h3>
                         <p>Comprehensive insights and performance metrics</p>
                     </div>
                     <div className="header-controls">
@@ -75,45 +87,62 @@ export function Reports() {
                 </div>
 
                 <div className="stats-grid">
+                    {/* Total Revenue */}
                     <div className="stat-box">
                         <div className="stat-header">
                             <IndianRupee size={16} className="stat-icon" />
                             <p className="stat-label">Total Revenue</p>
                         </div>
-                        <p className="stat-value">₹ {summary?.totalRevenue?.toLocaleString() || 0}</p>
-                        <p className="stat-trend">+12.5% from last period</p>
+                        <p className="stat-value">₹ {(summary?.totalRevenue || 0).toLocaleString()}</p>
+                        <p className="stat-trend">
+                            {hasPrevData
+                                ? <><TrendIcon val={revenueGrowth} /> {fmtPct(revenueGrowth)} vs {prevPeriodLabel}</>
+                                : `No data for ${prevPeriodLabel}`}
+                        </p>
                     </div>
 
+                    {/* Total Invoices */}
                     <div className="stat-box">
                         <div className="stat-header">
                             <FileText size={16} className="stat-icon" />
                             <p className="stat-label">Total Invoices</p>
                         </div>
                         <p className="stat-value">{summary?.totalInvoices || 0}</p>
-                        <p className="stat-trend">+8 new this month</p>
+                        <p className="stat-trend">
+                            {hasPrevData
+                                ? <><TrendIcon val={invoiceGrowth} /> {fmtPct(invoiceGrowth)} vs {prevPeriodLabel} ({summary?.prevCount || 0} invoices)</>
+                                : `No data for ${prevPeriodLabel}`}
+                        </p>
                     </div>
 
+                    {/* Outstanding Balance */}
                     <div className="stat-box">
                         <div className="stat-header">
                             <Users size={16} className="stat-icon" />
                             <p className="stat-label">Outstanding Balance</p>
                         </div>
-                        <p className="stat-value">₹ {summary?.totalBalance?.toLocaleString() || 0}</p>
-                        <p className="stat-trend text-red-600">Action required</p>
+                        <p className="stat-value">₹ {(summary?.totalBalance || 0).toLocaleString()}</p>
+                        <p className="stat-trend">
+                            {summary?.totalRevenue > 0
+                                ? `${((summary.totalBalance / summary.totalRevenue) * 100).toFixed(1)}% of period revenue`
+                                : 'No revenue in period'}
+                        </p>
                     </div>
 
+                    {/* Avg Invoice Value */}
                     <div className="stat-box">
                         <div className="stat-header">
                             <TrendingUp size={16} className="stat-icon" />
                             <p className="stat-label">Avg Invoice Value</p>
                         </div>
                         <p className="stat-value">
-                            ₹ {summary?.totalInvoices > 0
-                                ? Math.round(summary.totalRevenue / summary.totalInvoices).toLocaleString()
-                                : 0
-                            }
+                            ₹ {(summary?.avgInvoiceVal || 0).toLocaleString()}
                         </p>
-                        <p className="stat-trend">+5.2% from last period</p>
+                        <p className="stat-trend">
+                            {hasPrevData
+                                ? <><TrendIcon val={avgGrowth} /> {fmtPct(avgGrowth)} vs {prevPeriodLabel}</>
+                                : `No data for ${prevPeriodLabel}`}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -136,7 +165,7 @@ export function Reports() {
                                     </div>
                                 </div>
                                 <div className="customer-value">
-                                    <p>₹ {customer.totalAmount?.toLocaleString() || 0}</p>
+                                    <p>₹ {(customer.totalAmount || 0).toLocaleString()}</p>
                                 </div>
                             </div>
                         ))}
@@ -166,7 +195,7 @@ export function Reports() {
                                     className={index % 2 === 0 ? 'row-even' : 'row-odd'}
                                 >
                                     <td>{month.month}</td>
-                                    <td className="text-right">₹ {month.revenue?.toLocaleString() || 0}</td>
+                                    <td className="text-right">₹ {(month.revenue || 0).toLocaleString()}</td>
                                     <td className="text-right">{month.invoiceCount}</td>
                                     <td className="text-right">
                                         ₹ {month.invoiceCount > 0 ? Math.round(month.revenue / month.invoiceCount).toLocaleString() : 0}
@@ -180,4 +209,3 @@ export function Reports() {
         </div>
     );
 }
-
