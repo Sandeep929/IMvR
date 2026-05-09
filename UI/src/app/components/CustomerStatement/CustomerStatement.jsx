@@ -54,9 +54,27 @@ export function CustomerStatement() {
         }
     };
 
-    const handlePrint = () => {
-        // Our CSS @media print block automatically hides the sidebar/header and formats the document cleanly.
-        window.print();
+    const handlePrint = async () => {
+        // Our CSS @media print block and @page rules automatically hide the sidebar/header and format the document for A4 PDF standards.
+        if (window.windowControls && window.windowControls.printToPdf) {
+            const customerPrefix = selectedCustomer ? selectedCustomer.replace(/\s+/g, '_') + '_' : '';
+            const defaultFilename = `${customerPrefix}Statement_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.pdf`;
+            
+            try {
+                setLoading(true);
+                const result = await window.windowControls.printToPdf(defaultFilename);
+                if (!result.success && result.error !== 'Canceled') {
+                    setError('Failed to save PDF: ' + result.error);
+                }
+            } catch (err) {
+                setError('Failed to generate PDF: ' + err.message);
+            } finally {
+                setLoading(false);
+            }
+        } else {
+            // Fallback for standard browsers
+            window.print();
+        }
     };
 
     const handleExportMaster = async () => {
@@ -135,13 +153,25 @@ export function CustomerStatement() {
     const compWhatsapp = companyInfo.whatsapp || '9977175856';
     const compEmail = companyInfo.email || 'jcbricksmanufacturing@gmail.com';
 
+    // Calculate pagination chunks for printing
+    const statementLines = statementData?.lines || [];
+    const statementPages = [];
+    if (statementLines.length > 0) {
+        statementPages.push(statementLines.slice(0, 10));
+        for (let i = 10; i < statementLines.length; i += 19) {
+            statementPages.push(statementLines.slice(i, i + 19));
+        }
+    } else {
+        statementPages.push([]); // Fallback empty page
+    }
+
     return (
         <div className="statement-container">
             <div className="statement-controls panel">
                 <div className="control-group">
                     <label>Customer</label>
                     <SearchableDropdown
-                        options={customers.map(c => ({ label: c.name, value: c.name }))}
+                        options={customers.map((c, i) => ({ label: c.phone ? `${c.name} - ${c.phone}` : c.name, value: c.name, id: c._id || c.id || i }))}
                         value={selectedCustomer} 
                         onChange={(val) => setSelectedCustomer(val)}
                         placeholder="Select Customer..."
@@ -188,131 +218,142 @@ export function CustomerStatement() {
                     </div>
 
                     <div className="statement-document" ref={printRef}>
-                        {/* HEADER - Designed matches the reference image */}
-                        <div className="doc-header">
-                            <div className="flex justify-between items-center mb-2" style={{ padding: '0 10px' }}>
-                                {/* Left Logo */}
-                                <div style={{ width: '25%', display: 'flex', justifyContent: 'flex-start' }}>
-                                    <img src={logo} alt="logo" style={{ maxHeight: '85px', width: 'auto', objectFit: 'contain' }} />
-                                </div>
-                                
-                                {/* Center Title & Address */}
-                                <div style={{ width: '50%', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                                    <h1 className="doc-title font-bold" style={{ fontSize: '26px', marginBottom: '6px', letterSpacing: '0.5px' }}>{compName}</h1>
-                                    <p style={{ fontSize: '13px', color: '#111', margin: 0, fontWeight: 500 }}>{compAddress}</p>
-                                </div>
+                        {statementPages.map((pageLines, pageIndex) => (
+                            <div key={pageIndex} className={pageIndex > 0 ? "print-page-break" : ""}>
+                                {pageIndex === 0 && (
+                                    <>
+                                        {/* HEADER - Designed matches the reference image */}
+                                        <div className="doc-header">
+                                            <div className="flex justify-between items-center mb-2" style={{ padding: '0 10px' }}>
+                                                {/* Left Logo */}
+                                                <div style={{ width: '25%', display: 'flex', justifyContent: 'flex-start' }}>
+                                                    <img src={logo} alt="logo" style={{ maxHeight: '85px', width: 'auto', objectFit: 'contain' }} />
+                                                </div>
+                                                
+                                                {/* Center Title & Address */}
+                                                <div style={{ width: '50%', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                                    <h1 className="doc-title font-bold" style={{ fontSize: '26px', marginBottom: '6px', letterSpacing: '0.5px' }}>{compName}</h1>
+                                                    <p style={{ fontSize: '13px', color: '#111', margin: 0, fontWeight: 500 }}>{compAddress}</p>
+                                                </div>
 
-                                {/* Right Logo + Text */}
-                                <div style={{ width: '25%', display: 'flex', justifyContent: 'flex-end' }}>
-                                    <div className="flex flex-col items-center" style={{ gap: '2px' }}>
-                                        <img src={brickImage} alt="Brick" style={{ maxHeight: '75px', width: 'auto', objectFit: 'contain' }} />
-                                        <h2 className="text-red-600 font-bold mb-0" style={{ fontSize: '1.2rem', letterSpacing: '0.5px', marginTop: '4px' }}>JC Bricks</h2>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <hr className="doc-divider mt-2 mb-2 w-full" style={{ borderTopWidth: '3px', borderColor: '#dc2626' }} />
-                            
-                            <div className="contact-block flex justify-between mt-4">
-                                <div>
-                                    <p><strong>Contact No. :</strong> {compPhone}</p>
-                                    <p><strong>WhatsApp No. :</strong> {compWhatsapp}</p>
-                                </div>
-                                <div className="text-right">
-                                    <p><strong>Email ID :</strong> {compEmail}</p>
-                                    <p className="mt-4">
-                                        <strong>Date : </strong> 
-                                        {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-')}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                                                {/* Right Logo + Text */}
+                                                <div style={{ width: '25%', display: 'flex', justifyContent: 'flex-end' }}>
+                                                    <div className="flex flex-col items-center" style={{ gap: '2px' }}>
+                                                        <img src={brickImage} alt="Brick" style={{ maxHeight: '75px', width: 'auto', objectFit: 'contain' }} />
+                                                        <h2 className="text-red-600 font-bold mb-0" style={{ fontSize: '1.2rem', letterSpacing: '0.5px', marginTop: '4px' }}>JC Bricks</h2>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <hr className="doc-divider mt-2 mb-2 w-full" style={{ borderTopWidth: '3px', borderColor: '#dc2626' }} />
+                                            
+                                            <div className="contact-block flex justify-between mt-4">
+                                                <div>
+                                                    <p><strong>Contact No. :</strong> {compPhone}</p>
+                                                    <p><strong>WhatsApp No. :</strong> {compWhatsapp}</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p><strong>Email ID :</strong> {compEmail}</p>
+                                                    <p className="mt-4">
+                                                        <strong>Date : </strong> 
+                                                        {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-')}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                        {/* CUSTOMER INFO */}
-                        <div className="doc-customer-info text-center mt-6">
-                            <h2 className="underline font-bold text-xl inline-block">Customer Invoice</h2>
-                            <div className="text-left mt-4 flex justify-between">
-                                <div>
-                                    <p><strong>Name :</strong> {selectedCustomer} Ji</p>
-                                    <p><strong>Address :</strong> {currentCustomerObj.address || ''}</p>
-                                    <div className="flex">
-                                        <strong className="mr-1">Contact No. :</strong>
-                                        <div className="flex flex-col">
-                                            {(currentCustomerObj.phone || '').split(',').map((num, i) => (
-                                                <span key={i}>{num.trim()}</span>
-                                            ))}
+                                        {/* CUSTOMER INFO */}
+                                        <div className="doc-customer-info text-center mt-6">
+                                            <h2 className="underline font-bold text-xl inline-block">Customer Invoice</h2>
+                                            <div className="text-left mt-4 flex justify-between">
+                                                <div>
+                                                    <p><strong>Name :</strong> {selectedCustomer} Ji</p>
+                                                    <p><strong>Address :</strong> {currentCustomerObj.address || ''}</p>
+                                                    <div className="flex">
+                                                        <strong className="mr-1">Contact No. :</strong>
+                                                        <div className="flex flex-col">
+                                                            {(currentCustomerObj.phone || '').split(',').map((num, i) => (
+                                                                <span key={i}>{num.trim()}</span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-end">
+                                                    <p><strong>Email ID :</strong> {currentCustomerObj.email || ''}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+
+                                {/* DATA TABLE */}
+                                <table className="doc-table mt-4 w-full">
+                                    <thead>
+                                        <tr>
+                                            <th>S. N.</th>
+                                            <th>Date</th>
+                                            <th>Product Detail</th>
+                                            <th>Quantity</th>
+                                            <th>Pavti No.</th>
+                                            <th style={{ maxWidth: '150px' }}>Site</th>
+                                            <th>Rate</th>
+                                            <th>Total Amount</th>
+                                            <th>Advance Amount</th>
+                                            <th>Balance</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {pageLines.map((line, idx) => {
+                                            const absoluteIdx = pageIndex === 0 ? idx : 10 + (pageIndex - 1) * 19 + idx;
+                                            return (
+                                                <tr key={absoluteIdx}>
+                                                    <td className="text-center">{absoluteIdx + 1}</td>
+                                                    <td className="text-center">{new Date(line.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-')}</td>
+                                                    <td>{line.productDetail}</td>
+                                                    <td className="text-center">{line.quantity}</td>
+                                                    <td className="text-center">{line.pavtiNo}</td>
+                                                    <td className="text-center" style={{ maxWidth: '150px', wordWrap: 'break-word', whiteSpace: 'normal' }}>{line.site || '-'}</td>
+                                                    <td className="text-center">{line.rate}</td>
+                                                    <td className="text-right">₹ {line.totalAmount.toLocaleString()}</td>
+                                                    <td className="text-right">₹ {line.advanceAmount.toLocaleString()}</td>
+                                                    <td className="text-right">₹ {line.balance.toLocaleString()}</td>
+                                                </tr>
+                                            );
+                                        })}
+                                        {pageLines.length === 0 && (
+                                            <tr>
+                                                <td colSpan="10" className="text-center italic py-4">No records found for this period.</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+
+                                {/* FOOTER TOTALS */}
+                                {pageIndex === statementPages.length - 1 && statementData.lines && statementData.lines.length > 0 && (
+                                    <div className="doc-footer mt-4 flex flex-col items-end">
+                                        <div className="totals-grid grid grid-cols-2 gap-x-8 gap-y-2 w-full">
+                                            <div className="text-center flex items-center justify-center border font-bold h-full">
+                                                Total Bricks = {statementData.summary.totalBricks.toLocaleString()}
+                                            </div>
+                                            <div className="totals-right border">
+                                                <div className="flex justify-between p-1 border-b font-bold"><span className="mr-8 w-32 border-r text-right pr-2 block">Total Amount =</span> <span>₹ {statementData.summary.totalAmount.toLocaleString()}</span></div>
+                                                <div className="flex justify-between p-1 border-b font-bold"><span className="mr-8 w-32 border-r text-right pr-2 block">Deposit =</span> <span>₹ {statementData.summary.deposit.toLocaleString()}</span></div>
+                                                <div className="flex justify-between p-1 font-bold"><span className="mr-8 w-32 border-r text-right pr-2 block">Total Balance =</span> <span>₹ {statementData.summary.totalBalance.toLocaleString()}</span></div>
+                                            </div>
+                                        </div>
+                                        <div className="signatory w-full flex justify-between mt-8">
+                                            <div className="text-center ml-12">
+                                                <p>Authorized Signatory</p>
+                                                <p>{compName}</p>
+                                            </div>
+                                            <div className="mr-12 opacity-0">
+                                                <p>Placeholder</p>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div className="flex items-end">
-                                    <p><strong>Email ID :</strong> {currentCustomerObj.email || ''}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* DATA TABLE */}
-                        <table className="doc-table mt-4 w-full">
-                            <thead>
-                                <tr>
-                                    <th>S. N.</th>
-                                    <th>Date</th>
-                                    <th>Product Detail</th>
-                                    <th>Quantity</th>
-                                    <th>Pavti No.</th>
-                                    <th style={{ maxWidth: '150px' }}>Site</th>
-                                    <th>Rate</th>
-                                    <th>Total Amount</th>
-                                    <th>Advance Amount</th>
-                                    <th>Balance</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {(statementData.lines || []).map((line, idx) => (
-                                    <tr key={idx}>
-                                        <td className="text-center">{idx + 1}</td>
-                                        <td className="text-center">{new Date(line.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-')}</td>
-                                        <td>{line.productDetail}</td>
-                                        <td className="text-center">{line.quantity}</td>
-                                        <td className="text-center">{line.pavtiNo}</td>
-                                        <td className="text-center" style={{ maxWidth: '150px', wordWrap: 'break-word', whiteSpace: 'normal' }}>{line.site || '-'}</td>
-                                        <td className="text-center">{line.rate}</td>
-                                        <td className="text-right">₹ {line.totalAmount.toLocaleString()}</td>
-                                        <td className="text-right">₹ {line.advanceAmount.toLocaleString()}</td>
-                                        <td className="text-right">₹ {line.balance.toLocaleString()}</td>
-                                    </tr>
-                                ))}
-                                {(!statementData.lines || statementData.lines.length === 0) && (
-                                    <tr>
-                                        <td colSpan="10" className="text-center italic py-4">No records found for this period.</td>
-                                    </tr>
                                 )}
-                            </tbody>
-                        </table>
-
-                        {/* FOOTER TOTALS */}
-                        {(statementData.lines && statementData.lines.length > 0) && (
-                            <div className="doc-footer mt-4 flex flex-col items-end">
-                                <div className="totals-grid grid grid-cols-2 gap-x-8 gap-y-2 w-full">
-                                    <div className="text-center flex items-center justify-center border font-bold h-full">
-                                        Total Bricks = {statementData.summary.totalBricks.toLocaleString()}
-                                    </div>
-                                    <div className="totals-right border">
-                                        <div className="flex justify-between p-1 border-b font-bold"><span className="mr-8 w-32 border-r text-right pr-2 block">Total Amount =</span> <span>₹ {statementData.summary.totalAmount.toLocaleString()}</span></div>
-                                        <div className="flex justify-between p-1 border-b font-bold"><span className="mr-8 w-32 border-r text-right pr-2 block">Deposit =</span> <span>₹ {statementData.summary.deposit.toLocaleString()}</span></div>
-                                        <div className="flex justify-between p-1 font-bold"><span className="mr-8 w-32 border-r text-right pr-2 block">Total Balance =</span> <span>₹ {statementData.summary.totalBalance.toLocaleString()}</span></div>
-                                    </div>
-                                </div>
-                                <div className="signatory w-full flex justify-between mt-8">
-                                    <div className="text-center ml-12">
-                                        <p>Authorized Signatory</p>
-                                        <p>{compName}</p>
-                                    </div>
-                                    <div className="mr-12 opacity-0">
-                                        <p>Placeholder</p>
-                                    </div>
-                                </div>
                             </div>
-                        )}
+                        ))}
                     </div>
                 </div>
             )}

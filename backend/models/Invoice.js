@@ -1,7 +1,12 @@
 import mongoose from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
 
 const invoiceSchema = new mongoose.Schema({
-    uuid: { type: String, required: true, unique: true },
+    uuid: {
+        type: String,
+        default: uuidv4,
+        unique: true
+    },
     pavatiNo: { type: String, required: true },
     orderNo: { type: String },
     date: { type: Date, required: true },
@@ -30,7 +35,7 @@ const invoiceSchema = new mongoose.Schema({
     isDeleted: { type: Boolean, default: false }
 });
 
-invoiceSchema.pre('save', function(next) {
+invoiceSchema.pre('save', function (next) {
     this.updatedAt = Date.now();
     next();
 });

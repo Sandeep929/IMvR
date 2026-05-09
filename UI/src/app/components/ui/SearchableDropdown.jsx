@@ -112,9 +112,9 @@ export function SearchableDropdown({ options, value, onChange, placeholder }) {
                                 No results found
                             </div>
                         ) : (
-                            filteredOptions.map(opt => (
+                            filteredOptions.map((opt, index) => (
                                 <div
-                                    key={opt.value}
+                                    key={opt.id || `${opt.value}-${index}`}
                                     onClick={() => {
                                         onChange(opt.value);
                                         setIsOpen(false);

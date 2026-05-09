@@ -1,5 +1,40 @@
 import db from '../config/sqliteDb.js';
 
+/* Helper to prevent N+1 Queries */
+const attachItemsAndPayments = (invoices, fetchPayments = true) => {
+    if (invoices.length === 0) return invoices;
+    
+    const invoiceUuids = invoices.map(inv => inv.uuid);
+    const itemsMap = {};
+    const paymentsMap = {};
+    const chunkSize = 500;
+
+    for (let i = 0; i < invoiceUuids.length; i += chunkSize) {
+        const chunk = invoiceUuids.slice(i, i + chunkSize);
+        const placeholders = chunk.map(() => '?').join(',');
+        
+        const items = db.prepare(`SELECT * FROM invoice_items WHERE invoiceUuid IN (${placeholders})`).all(chunk);
+        for (const item of items) {
+            if (!itemsMap[item.invoiceUuid]) itemsMap[item.invoiceUuid] = [];
+            itemsMap[item.invoiceUuid].push(item);
+        }
+
+        if (fetchPayments) {
+            const payments = db.prepare(`SELECT * FROM invoice_payments WHERE invoiceUuid IN (${placeholders})`).all(chunk);
+            for (const payment of payments) {
+                if (!paymentsMap[payment.invoiceUuid]) paymentsMap[payment.invoiceUuid] = [];
+                paymentsMap[payment.invoiceUuid].push(payment);
+            }
+        }
+    }
+
+    return invoices.map(inv => ({
+        ...inv,
+        items: itemsMap[inv.uuid] || [],
+        ...(fetchPayments ? { payments: paymentsMap[inv.uuid] || [] } : {})
+    }));
+};
+
 // Get report data — OFFLINE (SQLite)
 export const getReportData = (req, res) => {
   try {
@@ -35,11 +70,7 @@ export const getReportData = (req, res) => {
     query += ` ORDER BY date DESC`;
     const invoices = db.prepare(query).all(...params);
 
-    const fullInvoices = invoices.map(inv => {
-      const items    = db.prepare('SELECT * FROM invoice_items    WHERE invoiceUuid = ?').all(inv.uuid);
-      const payments = db.prepare('SELECT * FROM invoice_payments WHERE invoiceUuid = ?').all(inv.uuid);
-      return { ...inv, items, payments };
-    });
+    const fullInvoices = attachItemsAndPayments(invoices, true);
 
 
     /* ===============================
@@ -235,9 +266,11 @@ export const getCustomerStatement = (req, res) => {
 
     const statementLines = [];
 
+    const fullInvoices = attachItemsAndPayments(invoices, false);
+
     // Following the JC Bricks Manufacturing sample structure
-    invoices.forEach(inv => {
-      const items = db.prepare('SELECT * FROM invoice_items WHERE invoiceUuid = ?').all(inv.uuid);
+    fullInvoices.forEach(inv => {
+      const items = inv.items;
       
       let invBricks = 0;
       let invAmount = 0;
@@ -341,11 +374,7 @@ export const getMasterData = (req, res) => {
 
     const invoices = db.prepare(query).all(...params);
 
-    const masterData = invoices.map(inv => {
-      const items = db.prepare('SELECT * FROM invoice_items WHERE invoiceUuid = ?').all(inv.uuid);
-      const payments = db.prepare('SELECT * FROM invoice_payments WHERE invoiceUuid = ?').all(inv.uuid);
-      return { ...inv, items, payments };
-    });
+    const masterData = attachItemsAndPayments(invoices, true);
 
     res.json(masterData);
 

@@ -217,21 +217,82 @@
 .block { display: block; }
 .opacity-0 { opacity: 0; }
 
+.print-page-break {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 2px dashed #cbd5e1;
+}
+
+/* Standard PDF Page Size */
+@page {
+    size: A4;
+    margin: 10mm;
+}
+
 /* Printing Rule */
 @media print {
-    body * {
-        visibility: hidden;
+    /* 1. Hide Global App Layout Elements */
+    .sidebar-container, .header-container, aside, header, nav {
+        display: none !important;
     }
-    .statement-document, .statement-document * {
-        visibility: visible;
+
+    /* 2. Reset Global App Layout Containers */
+    html, body, #root, .app-container, .app-main, .app-content {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: auto !important;
+        min-height: auto !important;
+        overflow: visible !important;
+        position: static !important;
+        background: white !important;
     }
+
+    /* 3. Hide Statement UI Elements */
+    .statement-controls, .preview-toolbar, .error-message {
+        display: none !important;
+    }
+
+    /* 4. Reset Statement Containers */
+    .statement-container, .statement-preview-wrapper {
+        display: block !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        background: white !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+    }
+
+    /* 5. Document Styling */
     .statement-document {
-        position: absolute;
-        left: 0;
-        top: 0;
-        box-shadow: none;
-        padding: 0;
-        margin: 0;
-        border: none;
+        display: block !important;
+        position: static !important;
+        width: 100% !important;
+        max-width: none !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        color: black !important;
+        background-color: white !important;
+    }
+
+    /* Prevent tables from splitting rows weirdly */
+    .doc-table {
+        page-break-inside: auto !important;
+    }
+    .doc-table tr {
+        page-break-inside: avoid !important;
+        page-break-after: auto !important;
+    }
+
+    .print-page-break {
+        page-break-before: always !important;
+        break-before: page !important;
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+        border-top: none !important;
     }
 }

@@ -192,7 +192,7 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                                 <div className="form-group">
                                     <label className="form-label">Customer Name <span className="required">*</span></label>
                                     <SearchableDropdown
-                                        options={customers.map(c => ({ label: c.name, value: c.name }))}
+                                        options={customers.map((c, i) => ({ label: c.phone ? `${c.name} - ${c.phone}` : c.name, value: c.name, id: c._id || c.id || i }))}
                                         value={formData.customerName}
                                         onChange={(val) => handleChange({ target: { name: 'customerName', value: val } })}
                                         placeholder="Select Customer..."

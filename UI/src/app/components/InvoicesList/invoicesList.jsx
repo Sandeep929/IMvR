@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Plus, Eye, Edit, Trash2, Download, Search, Filter, FileText, Loader2, CirclePlus, MessageCircle } from 'lucide-react';
 import { invoiceAPI, customerAPI } from '@/services/api';
 import { InvoiceForm } from '../InvoiceForm/invoiceForm';
@@ -20,6 +20,8 @@ export function InvoicesList() {
     const [filterStatus, setFilterStatus] = useState('all');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 25;
 
     useEffect(() => {
         loadInvoices();
@@ -159,6 +161,77 @@ export function InvoicesList() {
         XLSX.writeFile(workbook, `Invoices_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
     };
 
+
+
+    // Get unique products for filter dropdown (from items array)
+    const uniqueProducts = useMemo(() => {
+        if (!Array.isArray(invoices)) return [];
+        return [...new Set(invoices.flatMap(inv => (inv?.items || []).map(item => item?.product)).filter(Boolean))];
+    }, [invoices]);
+
+    // Filter invoices
+    const filteredInvoices = useMemo(() => {
+        if (!Array.isArray(invoices)) return [];
+        return invoices.filter(invoice => {
+            if (!invoice) return false;
+            
+            const matchesSearch =
+                (invoice.customerName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (invoice.site || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (invoice.vehicleNo || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (invoice.pavatiNo || '').toString().includes(searchTerm);
+
+            const matchesProduct = filterProduct === 'all' || (invoice.items || []).some(i => i?.product === filterProduct);
+            const matchesStatus =
+                filterStatus === 'all' ||
+                (filterStatus === 'paid' && Number(invoice.balance || 0) === 0) ||
+                (filterStatus === 'pending' && Number(invoice.balance || 0) > 0);
+
+            const matchesTime = (() => {
+                if (!invoice.date) return true;
+                const invDate = new Date(invoice.date);
+                if (isNaN(invDate.getTime())) return true;
+                invDate.setHours(0, 0, 0, 0);
+
+                if (startDate) {
+                    const start = new Date(startDate);
+                    start.setHours(0, 0, 0, 0);
+                    if (invDate < start) return false;
+                }
+                
+                if (endDate) {
+                    const end = new Date(endDate);
+                    end.setHours(0, 0, 0, 0);
+                    if (invDate > end) return false;
+                }
+                
+                return true;
+            })();
+
+            return matchesSearch && matchesProduct && matchesStatus && matchesTime;
+        });
+    }, [invoices, searchTerm, filterProduct, filterStatus, startDate, endDate]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, filterProduct, filterStatus, startDate, endDate]);
+
+    const totalPages = Math.ceil((filteredInvoices || []).length / itemsPerPage);
+    const paginatedInvoices = (filteredInvoices || []).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    // Calculate statistics
+    const stats = useMemo(() => {
+        const list = filteredInvoices || [];
+        return {
+            total: list.length,
+            totalAmount: list.reduce((sum, inv) => sum + Number(inv?.totalAmount || 0), 0),
+            totalAdvance: list.reduce((sum, inv) => sum + Number(inv?.totalAdvance || 0), 0),
+            totalBalance: list.reduce((sum, inv) => sum + Number(inv?.balance || 0), 0),
+            paid: list.filter(inv => Number(inv?.balance || 0) === 0).length,
+            pending: list.filter(inv => Number(inv?.balance || 0) > 0).length
+        };
+    }, [filteredInvoices]);
+
     if (showForm) {
         return (
             <InvoiceForm
@@ -191,56 +264,6 @@ export function InvoicesList() {
             </div>
         );
     }
-
-    // Get unique products for filter dropdown (from items array)
-    const uniqueProducts = [...new Set(invoices.flatMap(inv => (inv.items || []).map(item => item.product)).filter(Boolean))];
-
-    // Filter invoices
-    const filteredInvoices = invoices.filter(invoice => {
-        const productNames = (invoice.items || []).map(i => i.product).join(' ');
-        const matchesSearch =
-            (invoice.customerName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (invoice.site || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (invoice.vehicleNo || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (invoice.pavatiNo || '').toString().includes(searchTerm);
-
-        const matchesProduct = filterProduct === 'all' || (invoice.items || []).some(i => i.product === filterProduct);
-        const matchesStatus =
-            filterStatus === 'all' ||
-            (filterStatus === 'paid' && invoice.balance === 0) ||
-            (filterStatus === 'pending' && invoice.balance > 0);
-
-        const matchesTime = (() => {
-            const invDate = new Date(invoice.date);
-            invDate.setHours(0, 0, 0, 0);
-
-            if (startDate) {
-                const start = new Date(startDate);
-                start.setHours(0, 0, 0, 0);
-                if (invDate < start) return false;
-            }
-            
-            if (endDate) {
-                const end = new Date(endDate);
-                end.setHours(0, 0, 0, 0);
-                if (invDate > end) return false;
-            }
-            
-            return true;
-        })();
-
-        return matchesSearch && matchesProduct && matchesStatus && matchesTime;
-    });
-
-    // Calculate statistics
-    const stats = {
-        total: filteredInvoices.length,
-        totalAmount: filteredInvoices.reduce((sum, inv) => sum + (inv.totalAmount || 0), 0),
-        totalAdvance: filteredInvoices.reduce((sum, inv) => sum + (inv.totalAdvance || 0), 0),
-        totalBalance: filteredInvoices.reduce((sum, inv) => sum + (inv.balance || 0), 0),
-        paid: filteredInvoices.filter(inv => inv.balance === 0).length,
-        pending: filteredInvoices.filter(inv => inv.balance > 0).length
-    };
 
     return (
         <div className="invoices-container">
@@ -375,22 +398,24 @@ export function InvoicesList() {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredInvoices.map((invoice, index) => (
+                            {paginatedInvoices.map((invoice, index) => (
                                 <tr
-                                    key={invoice.id || invoice.id}
+                                    key={invoice.uuid || invoice.id || invoice._id || index}
                                     className={index % 2 === 0 ? 'row-even' : 'row-odd'}
                                 >
-                                    <td>{index + 1}</td>
+                                    <td>{index + 1 + (currentPage - 1) * itemsPerPage}</td>
                                     <td>
-                                        {new Date(invoice.date).toLocaleDateString('en-IN', {
-                                            day: '2-digit',
-                                            month: 'short',
-                                            year: '2-digit'
-                                        })}
+                                        {invoice?.date && !isNaN(new Date(invoice.date).getTime())
+                                            ? new Date(invoice.date).toLocaleDateString('en-IN', {
+                                                day: '2-digit',
+                                                month: 'short',
+                                                year: '2-digit'
+                                            })
+                                            : 'N/A'}
                                     </td>
                                     <td>{(invoice.items || []).map(i => i.product).join(', ') || 'N/A'}</td>
                                     <td className="text-right">{(invoice.items || []).reduce((s, i) => s + Number(i.quantity), 0).toLocaleString()}</td>
-                                    <td className="text-right">-</td>
+                                    <td className="text-right">{(invoice.items || []).map(i => i.rate ? `₹ ${Number(i.rate).toFixed(2)}` : '-').join(', ') || '-'}</td>
                                     <td className="text-right">₹ {(invoice.totalAmount || 0).toLocaleString()}</td>
                                     <td className="text-right text-green-700">₹ {(invoice.totalAdvance || 0).toLocaleString()}</td>
                                     <td className="text-right">
@@ -448,6 +473,30 @@ export function InvoicesList() {
                         </tbody>
                     </table>
                 </div>
+
+                {filteredInvoices.length > itemsPerPage && (
+                    <div className="pagination-controls" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', padding: '1rem', backgroundColor: 'white', borderTop: '1px solid #e2e8f0' }}>
+                        <div className="text-sm text-gray-600">
+                            Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredInvoices.length)} of {filteredInvoices.length} entries
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button 
+                                disabled={currentPage === 1} 
+                                onClick={() => setCurrentPage(p => p - 1)}
+                                style={{ padding: '0.5rem 1rem', border: '1px solid #e2e8f0', borderRadius: '0.375rem', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', backgroundColor: currentPage === 1 ? '#f8fafc' : 'white', color: currentPage === 1 ? '#94a3b8' : '#334155' }}
+                            >
+                                Previous
+                            </button>
+                            <button 
+                                disabled={currentPage === totalPages || totalPages === 0} 
+                                onClick={() => setCurrentPage(p => p + 1)}
+                                style={{ padding: '0.5rem 1rem', border: '1px solid #e2e8f0', borderRadius: '0.375rem', cursor: currentPage === totalPages || totalPages === 0 ? 'not-allowed' : 'pointer', backgroundColor: currentPage === totalPages || totalPages === 0 ? '#f8fafc' : 'white', color: currentPage === totalPages || totalPages === 0 ? '#94a3b8' : '#334155' }}
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 {filteredInvoices.length === 0 && (
                     <div className="empty-state">

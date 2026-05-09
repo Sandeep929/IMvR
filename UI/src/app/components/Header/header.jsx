@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Search, User, LogOut, Sun, Moon, Wifi, WifiOff } from 'lucide-react';
+import { Bell, Search, User, LogOut, Sun, Moon, Wifi, WifiOff, RefreshCw } from 'lucide-react';
 import './header.css';
 
-export function Header({ title, onLogout, theme, toggleTheme }) {
+export function Header({ title, onLogout, theme, toggleTheme, onRefresh }) {
     const username = localStorage.getItem('username') || 'Admin';
     const [isOnline, setIsOnline] = useState(navigator.onLine);
 
@@ -35,6 +35,15 @@ export function Header({ title, onLogout, theme, toggleTheme }) {
                 </div>
 
                 <div className="header-actions">
+                    <button
+                        onClick={onRefresh}
+                        className="theme-toggle-btn"
+                        title="Refresh Data"
+                        style={{ marginRight: '4px' }}
+                    >
+                        <RefreshCw size={18} />
+                    </button>
+
                     <button
                         onClick={toggleTheme}
                         className="theme-toggle-btn"

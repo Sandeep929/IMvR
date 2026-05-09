@@ -13,11 +13,42 @@ export const getInvoices = (req, res) => {
       ORDER BY date DESC
     `).all();
 
-    // Fetch items and payments for each invoice
+    if (invoices.length === 0) {
+      return res.json([]);
+    }
+
+    const invoiceUuids = invoices.map(inv => inv.uuid);
+    
+    const itemsMap = {};
+    const paymentsMap = {};
+
+    // SQLite has a limit on variables in IN clauses, so we chunk the queries
+    const chunkSize = 500;
+    for (let i = 0; i < invoiceUuids.length; i += chunkSize) {
+      const chunk = invoiceUuids.slice(i, i + chunkSize);
+      const placeholders = chunk.map(() => '?').join(',');
+      
+      const items = db.prepare(`SELECT * FROM invoice_items WHERE invoiceUuid IN (${placeholders})`).all(chunk);
+      for (const item of items) {
+        if (!itemsMap[item.invoiceUuid]) itemsMap[item.invoiceUuid] = [];
+        itemsMap[item.invoiceUuid].push(item);
+      }
+
+      const payments = db.prepare(`SELECT * FROM invoice_payments WHERE invoiceUuid IN (${placeholders})`).all(chunk);
+      for (const payment of payments) {
+        if (!paymentsMap[payment.invoiceUuid]) paymentsMap[payment.invoiceUuid] = [];
+        paymentsMap[payment.invoiceUuid].push(payment);
+      }
+    }
+
     const fullInvoices = invoices.map(invoice => {
-      const items = db.prepare('SELECT * FROM invoice_items WHERE invoiceUuid = ?').all(invoice.uuid);
-      const payments = db.prepare('SELECT * FROM invoice_payments WHERE invoiceUuid = ?').all(invoice.uuid);
-      return { ...invoice, items, payments, id: invoice.uuid, _id: invoice.uuid };
+      return { 
+        ...invoice, 
+        items: itemsMap[invoice.uuid] || [], 
+        payments: paymentsMap[invoice.uuid] || [], 
+        id: invoice.uuid, 
+        _id: invoice.uuid 
+      };
     });
 
     res.json(fullInvoices);

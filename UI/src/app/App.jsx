@@ -20,6 +20,11 @@ export default function App() {
     const [activeTab, setActiveTab] = useState('dashboard');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+    const handleRefresh = () => {
+        setRefreshTrigger(prev => prev + 1);
+    };
 
     // Apply theme
     useEffect(() => {
@@ -147,8 +152,9 @@ export default function App() {
                     onLogout={handleLogout}
                     theme={theme}
                     toggleTheme={toggleTheme}
+                    onRefresh={handleRefresh}
                 />
-                <div className="app-content">
+                <div className="app-content" key={refreshTrigger}>
                     {renderContent()}
                 </div>
             </div>

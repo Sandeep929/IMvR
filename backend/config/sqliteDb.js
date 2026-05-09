@@ -123,6 +123,12 @@ CREATE TABLE IF NOT EXISTS raw_material_expenses (
   synced INTEGER DEFAULT 0
 );
 
+CREATE INDEX IF NOT EXISTS idx_customers_isDeleted ON customers(isDeleted);
+CREATE INDEX IF NOT EXISTS idx_invoices_isDeleted ON invoices(isDeleted);
+CREATE INDEX IF NOT EXISTS idx_invoices_date ON invoices(date);
+CREATE INDEX IF NOT EXISTS idx_invoice_items_invoiceUuid ON invoice_items(invoiceUuid);
+CREATE INDEX IF NOT EXISTS idx_invoice_payments_invoiceUuid ON invoice_payments(invoiceUuid);
+
 `);
 
 /* Simple migration to add missing columns */

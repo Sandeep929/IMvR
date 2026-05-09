@@ -3,5 +3,6 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('windowControls', {
   close: () => ipcRenderer.send('window-close'),
   minimize: () => ipcRenderer.send('window-minimize'),
-  maximize: () => ipcRenderer.send('window-maximize')
+  maximize: () => ipcRenderer.send('window-maximize'),
+  printToPdf: (filename) => ipcRenderer.invoke('print-to-pdf', filename)
 });

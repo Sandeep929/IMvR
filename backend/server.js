@@ -41,4 +41,5 @@ app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
 
+// Start Auto Sync (SQLite to MongoDB Atlas)
 startAutoSync();

@@ -1,6 +1,7 @@
-const { app, ipcMain, BrowserWindow } = require("electron");
+const { app, ipcMain, BrowserWindow, dialog } = require("electron");
 const path = require("path");
 const { spawn } = require('child_process');
+const fs = require('fs');
 
 let serverProcess;
 
@@ -58,6 +59,28 @@ ipcMain.on('window-maximize', () => {
   const win = BrowserWindow.getFocusedWindow();
   if (win) {
     win.isMaximized() ? win.unmaximize() : win.maximize();
+  }
+});
+
+ipcMain.handle('print-to-pdf', async (event, defaultFilename) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  const { canceled, filePath } = await dialog.showSaveDialog(win, {
+    title: 'Save Statement',
+    filters: [{ name: 'PDF Documents', extensions: ['pdf'] }],
+    defaultPath: defaultFilename || 'Statement.pdf'
+  });
+  
+  if (canceled) return { success: false, error: 'Canceled' };
+
+  try {
+    const pdfData = await win.webContents.printToPDF({
+      printBackground: true,
+      preferCSSPageSize: true
+    });
+    fs.writeFileSync(filePath, pdfData);
+    return { success: true, path: filePath };
+  } catch (err) {
+    return { success: false, error: err.message };
   }
 });
 

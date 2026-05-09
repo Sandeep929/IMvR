@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Plus, Edit, Trash2, Phone, MapPin, FileText, IndianRupee, TrendingUp, User, X, Loader2, Download, Filter, AlertCircle, MessageCircle } from 'lucide-react';
 import { customerAPI, invoiceAPI } from '@/services/api';
 import './customers.css';
@@ -15,6 +15,8 @@ export function Customers() {
     const [showDownload, setShowDownload] = useState(false);
     const [downloadFrom, setDownloadFrom] = useState('');
     const [downloadTo, setDownloadTo] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 25;
 
     useEffect(() => {
         loadCustomerData();
@@ -38,34 +40,49 @@ export function Customers() {
     };
 
     // Enrich customers with invoice data
-    const enrichedCustomers = customers.map(customer => {
-        const customerInvoices = invoices.filter(inv => inv.customerName === customer.name);
-        return {
-            ...customer,
-            totalInvoices: customerInvoices.length,
-            totalAmount: customerInvoices.reduce((sum, inv) => sum + (inv.totalAmount || 0), 0),
-            totalPaid: customerInvoices.reduce((sum, inv) => sum + (inv.totalAdvance || 0), 0),
-            balance: customerInvoices.reduce((sum, inv) => sum + (inv.balance || 0), 0),
-            products: [...new Set(customerInvoices.flatMap(inv => (inv.items || []).map(i => i.product)))],
-            lastInvoiceDate: customerInvoices.length > 0
-                ? customerInvoices.sort((a, b) => new Date(b.date) - new Date(a.date))[0].date
-                : null
-        };
-    });
+    const enrichedCustomers = useMemo(() => {
+        if (!Array.isArray(customers) || !Array.isArray(invoices)) return [];
+        return customers.map(customer => {
+            if (!customer) return null;
+            const customerInvoices = (invoices || []).filter(inv => inv?.customerName === customer?.name);
+            return {
+                ...customer,
+                totalInvoices: customerInvoices.length,
+                totalAmount: customerInvoices.reduce((sum, inv) => sum + Number(inv?.totalAmount || 0), 0),
+                totalPaid: customerInvoices.reduce((sum, inv) => sum + Number(inv?.totalAdvance || 0), 0),
+                balance: customerInvoices.reduce((sum, inv) => sum + Number(inv?.balance || 0), 0),
+                products: [...new Set(customerInvoices.flatMap(inv => (inv?.items || []).map(i => i?.product)))].filter(Boolean),
+                lastInvoiceDate: customerInvoices.length > 0
+                    ? customerInvoices.sort((a, b) => new Date(b?.date || 0) - new Date(a?.date || 0))[0]?.date
+                    : null
+            };
+        }).filter(Boolean);
+    }, [customers, invoices]);
 
-    const filteredCustomers = enrichedCustomers.filter(customer => {
-        const matchesSearch =
-            (customer.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (customer.phone || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (customer.address || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const filteredCustomers = useMemo(() => {
+        if (!Array.isArray(enrichedCustomers)) return [];
+        return enrichedCustomers.filter(customer => {
+            if (!customer) return false;
+            const matchesSearch =
+                (customer.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (customer.phone || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (customer.address || '').toLowerCase().includes(searchTerm.toLowerCase());
 
-        const matchesDue =
-            dueFilter === 'all' ||
-            (dueFilter === 'due' && customer.balance > 0) ||
-            (dueFilter === 'paid' && customer.balance <= 0);
+            const matchesDue =
+                dueFilter === 'all' ||
+                (dueFilter === 'due' && Number(customer.balance || 0) > 0) ||
+                (dueFilter === 'paid' && Number(customer.balance || 0) <= 0);
 
-        return matchesSearch && matchesDue;
-    });
+            return matchesSearch && matchesDue;
+        });
+    }, [enrichedCustomers, searchTerm, dueFilter]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, dueFilter]);
+
+    const totalPages = Math.ceil((filteredCustomers || []).length / itemsPerPage);
+    const paginatedCustomers = (filteredCustomers || []).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     // ── Master Record CSV Download ──────────────────────────────────
     const handleDownloadMasterRecord = () => {
@@ -111,14 +128,17 @@ export function Customers() {
         setShowDownload(false);
     };
 
-    const stats = {
-        total: enrichedCustomers.length,
-        active: enrichedCustomers.filter(c => c.balance > 0).length,
-        totalRevenue: enrichedCustomers.reduce((sum, c) => sum + c.totalAmount, 0),
-        avgRevenue: enrichedCustomers.length > 0
-            ? enrichedCustomers.reduce((sum, c) => sum + c.totalAmount, 0) / enrichedCustomers.length
-            : 0
-    };
+    const stats = useMemo(() => {
+        const list = enrichedCustomers || [];
+        return {
+            total: list.length,
+            active: list.filter(c => Number(c?.balance || 0) > 0).length,
+            totalRevenue: list.reduce((sum, c) => sum + Number(c?.totalAmount || 0), 0),
+            avgRevenue: list.length > 0
+                ? list.reduce((sum, c) => sum + Number(c?.totalAmount || 0), 0) / list.length
+                : 0
+        };
+    }, [enrichedCustomers]);
 
     const handleAdd = () => {
         setEditingCustomer(null);
@@ -333,7 +353,7 @@ export function Customers() {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredCustomers.map((customer, index) => (
+                            {paginatedCustomers.map((customer, index) => (
                                 <tr
                                     key={customer._id || customer.id}
                                     className={index % 2 === 0 ? 'row-even' : 'row-odd'}
@@ -397,7 +417,7 @@ export function Customers() {
                                         )}
                                     </td>
                                     <td className="date-text">
-                                        {customer.lastInvoiceDate
+                                        {customer?.lastInvoiceDate && !isNaN(new Date(customer.lastInvoiceDate).getTime())
                                             ? new Date(customer.lastInvoiceDate).toLocaleDateString('en-IN', {
                                                 day: '2-digit',
                                                 month: 'short',
@@ -429,6 +449,30 @@ export function Customers() {
                         </tbody>
                     </table>
                 </div>
+
+                {filteredCustomers.length > itemsPerPage && (
+                    <div className="pagination-controls" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', padding: '1rem', backgroundColor: 'white', borderTop: '1px solid #e2e8f0' }}>
+                        <div className="text-sm text-gray-600">
+                            Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredCustomers.length)} of {filteredCustomers.length} entries
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button 
+                                disabled={currentPage === 1} 
+                                onClick={() => setCurrentPage(p => p - 1)}
+                                style={{ padding: '0.5rem 1rem', border: '1px solid #e2e8f0', borderRadius: '0.375rem', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', backgroundColor: currentPage === 1 ? '#f8fafc' : 'white', color: currentPage === 1 ? '#94a3b8' : '#334155' }}
+                            >
+                                Previous
+                            </button>
+                            <button 
+                                disabled={currentPage === totalPages || totalPages === 0} 
+                                onClick={() => setCurrentPage(p => p + 1)}
+                                style={{ padding: '0.5rem 1rem', border: '1px solid #e2e8f0', borderRadius: '0.375rem', cursor: currentPage === totalPages || totalPages === 0 ? 'not-allowed' : 'pointer', backgroundColor: currentPage === totalPages || totalPages === 0 ? '#f8fafc' : 'white', color: currentPage === totalPages || totalPages === 0 ? '#94a3b8' : '#334155' }}
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

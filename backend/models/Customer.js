@@ -1,7 +1,8 @@
 import mongoose from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
 
 const customerSchema = new mongoose.Schema({
-    uuid: { type: String, required: true, unique: true },
+    uuid: { type: String, default: uuidv4, unique: true },
     name: { type: String, required: true },
     phone: { type: String, required: true },
     whatsappNumber: { type: String },
@@ -12,7 +13,7 @@ const customerSchema = new mongoose.Schema({
     isDeleted: { type: Boolean, default: false }
 });
 
-customerSchema.pre('save', function(next) {
+customerSchema.pre('save', function (next) {
     this.updatedAt = Date.now();
     next();
 });
