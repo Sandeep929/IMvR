@@ -4,7 +4,9 @@ import { rawMaterialAPI } from '../../../services/api';
 
 const MATERIALS_LIST = [
     'Cement', 'Sand', 'Gravel', 'Brick', 'Steel', 'Lime',
-    'Clay', 'Fly Ash', 'Water', 'Coal', 'Other'
+    'Clay', 'Fly Ash', 'Water', 'Coal',
+    'Randaa', 'Dhula', 'Bakaas', 'Dholpuri Clay', 'Burada', 'Soyabean Bagda',
+    'Other'
 ];
 
 export function RawMaterialForm({ onSuccess, onCancel }) {

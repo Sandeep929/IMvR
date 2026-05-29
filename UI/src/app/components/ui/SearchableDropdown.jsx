@@ -16,9 +16,10 @@ export function SearchableDropdown({ options, value, onChange, placeholder }) {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [wrapperRef]);
 
-    const filteredOptions = options.filter(opt =>
-        (opt.label || '').toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredOptions = options.filter(opt => {
+        const searchField = opt.searchKey !== undefined ? opt.searchKey : opt.label;
+        return (searchField || '').toLowerCase().includes(searchTerm.toLowerCase());
+    });
 
     const selectedOption = options.find(opt => opt.value === value);
 

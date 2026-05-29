@@ -32,6 +32,14 @@ export function Settings() {
         defaultRate: '6.8'
     });
 
+    const [gmailConfig, setGmailConfig] = useState({
+        email: '',
+        password: ''
+    });
+    const [isSavingGmail, setIsSavingGmail] = useState(false);
+    const [gmailError, setGmailError] = useState('');
+    const [gmailSuccess, setGmailSuccess] = useState('');
+
     useEffect(() => {
         loadSettings();
     }, []);
@@ -40,7 +48,10 @@ export function Settings() {
         try {
             const res = await settingsAPI.getSettings();
             const data = res.data;
-            if (data.company && Object.keys(data.company).length > 0) setCompanyInfo(prev => ({ ...prev, ...data.company }));
+            if (data.company && Object.keys(data.company).length > 0) {
+                setCompanyInfo(prev => ({ ...prev, ...data.company }));
+                setGmailConfig(prev => ({ ...prev, email: data.company.email || '' }));
+            }
             if (data.user && Object.keys(data.user).length > 0) setUserSettings(prev => ({ ...prev, ...data.user }));
             if (data.invoice && Object.keys(data.invoice).length > 0) setInvoiceSettings(prev => ({ ...prev, ...data.invoice }));
         } catch (err) {
@@ -48,12 +59,47 @@ export function Settings() {
         }
     };
 
+    const handleGmailSubmit = async (e) => {
+        e.preventDefault();
+        setGmailError('');
+        setGmailSuccess('');
+        setIsSavingGmail(true);
+        try {
+            const res = await settingsAPI.updateEmailSettings(gmailConfig);
+            if (res.data && res.data.success) {
+                setGmailSuccess('Gmail SMTP settings verified and saved successfully.');
+                setGmailConfig(prev => ({ ...prev, password: '' })); // Clear password field
+            } else {
+                setGmailError(res.data?.message || 'Failed to verify and save Gmail settings.');
+            }
+        } catch (err) {
+            setGmailError(err.response?.data?.message || 'Gmail SMTP verification failed. Please verify your Gmail ID and App Password.');
+        } finally {
+            setIsSavingGmail(false);
+        }
+    };
+
+    const [successMessage, setSuccessMessage] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
+
+    const showNotification = (type, text) => {
+        if (type === 'success') {
+            setSuccessMessage(text);
+            setErrorMessage('');
+            setTimeout(() => setSuccessMessage(''), 4000);
+        } else {
+            setErrorMessage(text);
+            setSuccessMessage('');
+            setTimeout(() => setErrorMessage(''), 5000);
+        }
+    };
+
     const handleSaveSettings = async (category, settings) => {
         try {
             await settingsAPI.updateSettings({ category, settings });
-            alert(`${category.charAt(0).toUpperCase() + category.slice(1)} settings updated successfully`);
+            showNotification('success', `${category.charAt(0).toUpperCase() + category.slice(1)} settings updated successfully`);
         } catch (err) {
-            alert(`Failed to save ${category} settings`);
+            showNotification('error', `Failed to save ${category} settings`);
             console.error(err);
         }
     };
@@ -67,7 +113,7 @@ export function Settings() {
     const handleUserSubmit = (e) => {
         e.preventDefault();
         if (userSettings.newPassword && userSettings.newPassword !== userSettings.confirmPassword) {
-            alert('New passwords do not match');
+            showNotification('error', 'New passwords do not match');
             return;
         }
         
@@ -75,11 +121,9 @@ export function Settings() {
         if (userSettings.newPassword) {
             updatedSettings.password = userSettings.newPassword;
         } else if (!updatedSettings.password && userSettings.currentPassword) {
-             // Fallback to explicitly save original if no new password is set
             updatedSettings.password = userSettings.currentPassword;
         }
         
-        // Clear fields so they don't persist locally awkwardly
         updatedSettings.currentPassword = '';
         updatedSettings.newPassword = '';
         updatedSettings.confirmPassword = '';
@@ -95,7 +139,8 @@ export function Settings() {
     const tabs = [
         { id: 'company', label: 'Company Info', icon: Building2 },
         { id: 'user', label: 'User Account', icon: User },
-        { id: 'invoice', label: 'Invoice Settings', icon: Printer }
+        { id: 'invoice', label: 'Invoice Settings', icon: Printer },
+        { id: 'email', label: 'Gmail Setup', icon: Mail }
     ];
 
     return (
@@ -132,6 +177,32 @@ export function Settings() {
 
                 {/* Content */}
                 <div className="settings-content">
+                    {successMessage && (
+                        <div className="settings-global-success" style={{
+                            padding: '1rem',
+                            backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                            borderLeft: '4px solid #10b981',
+                            marginBottom: '1.5rem',
+                            borderRadius: '0.25rem',
+                            color: '#065f46',
+                            fontSize: '0.875rem'
+                        }}>
+                            {successMessage}
+                        </div>
+                    )}
+                    {errorMessage && (
+                        <div className="settings-global-error" style={{
+                            padding: '1rem',
+                            backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                            borderLeft: '4px solid #ef4444',
+                            marginBottom: '1.5rem',
+                            borderRadius: '0.25rem',
+                            color: '#991b1b',
+                            fontSize: '0.875rem'
+                        }}>
+                            {errorMessage}
+                        </div>
+                    )}
                     {activeTab === 'company' && (
                         <div className="content-card">
                             <div className="content-header">
@@ -429,6 +500,74 @@ export function Settings() {
                                     >
                                         <Save size={18} />
                                         Save Changes
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
+
+                    {activeTab === 'email' && (
+                        <div className="content-card">
+                            <div className="content-header">
+                                <h4 className="content-title">Gmail SMTP Settings</h4>
+                                <p className="content-subtitle">Configure system email to send OTP codes for password reset</p>
+                            </div>
+                            
+                            {gmailError && (
+                                <div className="settings-error-banner" style={{ padding: '1rem', backgroundColor: 'rgba(239, 68, 68, 0.12)', borderLeft: '4px solid #ef4444', marginBottom: '1.5rem', borderRadius: '0.25rem', color: '#991b1b', fontSize: '0.875rem' }}>
+                                    {gmailError}
+                                </div>
+                            )}
+
+                            {gmailSuccess && (
+                                <div className="settings-success-banner" style={{ padding: '1rem', backgroundColor: 'rgba(16, 185, 129, 0.12)', borderLeft: '4px solid #10b981', marginBottom: '1.5rem', borderRadius: '0.25rem', color: '#065f46', fontSize: '0.875rem' }}>
+                                    {gmailSuccess}
+                                </div>
+                            )}
+
+                            <form onSubmit={handleGmailSubmit}>
+                                <div className="settings-form-body">
+                                    <div className="form-group-stack">
+                                        <div>
+                                            <label className="form-label">
+                                                Gmail Address <span className="required-star">*</span>
+                                            </label>
+                                            <input
+                                                type="email"
+                                                value={gmailConfig.email}
+                                                onChange={(e) => setGmailConfig({ ...gmailConfig, email: e.target.value })}
+                                                required
+                                                placeholder="example@gmail.com"
+                                                className="settings-input"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="form-label">
+                                                Gmail App Password <span className="required-star">*</span>
+                                            </label>
+                                            <input
+                                                type="password"
+                                                value={gmailConfig.password}
+                                                onChange={(e) => setGmailConfig({ ...gmailConfig, password: e.target.value })}
+                                                required
+                                                placeholder="Enter 16-character App Password"
+                                                className="settings-input"
+                                            />
+                                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                                                Note: For security reasons, do not use your regular account password. Generate a 16-character Google App Password in your Google Account security settings.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="settings-form-footer">
+                                    <button
+                                        type="submit"
+                                        disabled={isSavingGmail}
+                                        className="save-btn"
+                                    >
+                                        <Save size={18} />
+                                        {isSavingGmail ? 'Verifying & Saving...' : 'Save & Verify Config'}
                                     </button>
                                 </div>
                             </form>

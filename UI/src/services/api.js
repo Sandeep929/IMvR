@@ -51,7 +51,11 @@ export const reportAPI = {
 // ─── Settings ─────────────────────────────────────────────
 export const settingsAPI = {
     getSettings: () => api.get('/settings'),
-    updateSettings: (data) => api.post('/settings', data)
+    updateSettings: (data) => api.post('/settings', data),
+    forgotPassword: () => api.post('/settings/forgot-password'),
+    verifyOtp: (data) => api.post('/settings/verify-otp', data),
+    resetPassword: (data) => api.post('/settings/reset-password', data),
+    updateEmailSettings: (data) => api.post('/settings/email-setup', data)
 };
 
 // ─── Raw Materials ──────────────────────────────────────────

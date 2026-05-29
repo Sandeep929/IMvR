@@ -136,8 +136,18 @@
     max-width: 900px;
     margin: 0 auto;
     font-family: Arial, sans-serif;
-    font-size: 14px;
+    font-size: 12px;
     width: 100%;
+}
+
+.statement-document p {
+    margin: 4px 0;
+}
+
+.statement-document h1,
+.statement-document h2,
+.statement-document h3 {
+    margin: 0;
 }
 
 .doc-title {
@@ -295,4 +305,10 @@
         padding-top: 0 !important;
         border-top: none !important;
     }
+
+    .doc-footer {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
 }
+

@@ -83,3 +83,9 @@ electron/.vite/
 .idea/
 *.swp
 *.swo
+
+# Temporary / Utility / Script files
+generateUUID.js
+import_customers.js
+import_invoices.js
+test_fetch.js
