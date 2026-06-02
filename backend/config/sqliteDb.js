@@ -2,14 +2,17 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-/* Recreate __dirname for ES Modules */
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+/* Recreate __dirname for ES Modules — also works when bundled to CJS by esbuild */
+// In CJS context (bundled), __dirname is available natively
+// In native ESM, fall back to import.meta.url
+const __dirname_compat = typeof __dirname !== 'undefined'
+  ? __dirname
+  : path.dirname(fileURLToPath(import.meta.url));
 
 /* Use AppData path in packaged app, local path in dev */
 const dbPath = process.env.USER_DATA_PATH
   ? path.join(process.env.USER_DATA_PATH, 'local.db')
-  : path.join(__dirname, 'local.db');
+  : path.join(__dirname_compat, 'local.db');
 
 /* Open SQLite database */
 const db = new Database(dbPath);

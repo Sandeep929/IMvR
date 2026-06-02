@@ -25,14 +25,14 @@ function startServer() {
 
   try {
     // Require the esbuild-bundled backend (starts Express on port 5000)
-    const serverBundle = app.isPackaged
-      ? path.join(process.resourcesPath, "server-bundle.cjs")
-      : path.join(__dirname, "server-bundle.cjs");
+    // In both dev and packaged modes, server-bundle.cjs is in the same directory as main.cjs
+    const serverBundle = path.join(__dirname, "server-bundle.cjs");
 
     require(serverBundle);
     console.log("[Main] Backend server started.");
   } catch (err) {
     console.error("[Main] Failed to start backend:", err);
+    dialog.showErrorBox("Backend Startup Error", err.stack || err.message || String(err));
   }
 }
 

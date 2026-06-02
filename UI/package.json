@@ -8,8 +8,8 @@
     "build": "vite build",
     "dev": "vite",
     "electron": "npm run build && electron .",
-    "bundle-backend": "esbuild ../backend/server.js --bundle --platform=node --format=cjs --external:better-sqlite3 --outfile=electron/server-bundle.cjs --log-level=info",
-    "build:win": "npm run build && npm run bundle-backend && electron-builder --win"
+    "bundle-backend": "node -e \"require('esbuild').buildSync({entryPoints:['../backend/server.js'],bundle:true,platform:'node',format:'cjs',external:['better-sqlite3'],outfile:'electron/server-bundle.cjs',logLevel:'info'})\"",
+    "build:win": "npm run build && npm run bundle-backend && node -e \"process.env.ELECTRON_BUILDER_BINARIES_MIRROR='https://npmmirror.com/mirrors/electron-builder-binaries/';require('child_process').execSync('npx electron-builder --win',{stdio:'inherit',cwd:__dirname})\""
   },
   "dependencies": {
     "@emotion/react": "11.14.0",

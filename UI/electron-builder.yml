@@ -25,6 +25,10 @@ win:
   target:
     - target: nsis
       arch: x64
+  # No code signing (private/internal app)
+  sign: null
+  signingHashAlgorithms: []
+  forceCodeSigning: false
 
 # NSIS installer wizard config
 nsis:
@@ -33,8 +37,8 @@ nsis:
   createDesktopShortcut: true
   createStartMenuShortcut: true
   shortcutName: JC Bricks
-  installerSidebar: src/assets/installer-sidebar.png
-  installerHeader: src/assets/installer-header.png
+  installerSidebar: src/assets/installer-sidebar.bmp
+  installerHeader: src/assets/installer-header.bmp
   installerHeaderIcon: src/assets/icon.png
 
 # Rebuild native modules (better-sqlite3) for Electron's Node ABI
