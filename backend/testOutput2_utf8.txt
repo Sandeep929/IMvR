@@ -1,4 +1,0 @@
-﻿[dotenv@17.3.1] injecting env (2) from .env -- tip: ΓÜÖ∩╕Å  suppress all logs with { quiet: true }
-[dotenv@17.3.1] injecting env (0) from .env -- tip: ≡ƒöÉ prevent committing .env to code: https://dotenvx.com/precommit
-MongoDB Atlas Connected: ac-ls1qi9v-shard-00-00.uyqsvsc.mongodb.net
-Products pulled from cloud: 1

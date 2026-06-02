@@ -44,6 +44,13 @@ export const syncProducts = async () => {
     const stateRow = db.prepare(`SELECT lastSync FROM sync_state WHERE entity = 'products'`).get();
     let lastSyncTime = stateRow ? new Date(stateRow.lastSync) : new Date(0);
 
+    // If local table is empty, force full pull regardless of stored sync_state
+    const localCount = db.prepare(`SELECT COUNT(*) as cnt FROM products`).get();
+    if (localCount.cnt === 0) {
+      console.log('Products table empty — forcing full pull from cloud...');
+      lastSyncTime = new Date(0);
+    }
+
     const updatedInCloud = await Product.find({
       $or: [
         { updatedAt: { $gt: lastSyncTime } },

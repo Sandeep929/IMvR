@@ -63,7 +63,14 @@ export const syncRawMaterials = async () => {
     // Pull raw_materials
     try {
         const matStateRow = db.prepare(`SELECT lastSync FROM sync_state WHERE entity = 'raw_materials'`).get();
-        const matLastSync = matStateRow ? new Date(matStateRow.lastSync) : new Date(0);
+        let matLastSync = matStateRow ? new Date(matStateRow.lastSync) : new Date(0);
+
+        // If local table is empty, force full pull regardless of stored sync_state
+        const matLocalCount = db.prepare(`SELECT COUNT(*) as cnt FROM raw_materials`).get();
+        if (matLocalCount.cnt === 0) {
+            console.log('Raw materials table empty — forcing full pull from cloud...');
+            matLastSync = new Date(0);
+        }
 
         const cloudMaterials = await RawMaterial.find({
             $or: [

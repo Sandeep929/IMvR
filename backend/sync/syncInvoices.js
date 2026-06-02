@@ -54,6 +54,13 @@ export const syncInvoices = async () => {
     const stateRow = db.prepare(`SELECT lastSync FROM sync_state WHERE entity = 'invoices'`).get();
     let lastSyncTime = stateRow ? new Date(stateRow.lastSync) : new Date(0);
 
+    // If local table is empty, force full pull regardless of stored sync_state
+    const localCount = db.prepare(`SELECT COUNT(*) as cnt FROM invoices`).get();
+    if (localCount.cnt === 0) {
+      console.log('Invoices table empty — forcing full pull from cloud...');
+      lastSyncTime = new Date(0);
+    }
+
     const updatedInCloud = await Invoice.find({
       $or: [
         { updatedAt: { $gt: lastSyncTime } },
