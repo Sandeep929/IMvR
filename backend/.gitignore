@@ -55,6 +55,9 @@ Desktop.ini
 logs/
 *.log
 
+# SQLite database (user data — never commit)
+config/local.db
+
 # =========================
 # Electron runtime cache
 # =========================

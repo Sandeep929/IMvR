@@ -6,8 +6,10 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-/* Create database in config folder */
-const dbPath = path.join(__dirname, 'local.db');
+/* Use AppData path in packaged app, local path in dev */
+const dbPath = process.env.USER_DATA_PATH
+  ? path.join(process.env.USER_DATA_PATH, 'local.db')
+  : path.join(__dirname, 'local.db');
 
 /* Open SQLite database */
 const db = new Database(dbPath);

@@ -3,7 +3,16 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 
-dotenv.config();
+// Load SMTP env from userData (packaged) or backend .env (dev)
+const smtpEnvPath = process.env.USER_DATA_PATH
+  ? path.join(process.env.USER_DATA_PATH, 'smtp.env')
+  : path.join(process.cwd(), '.env');
+
+if (fs.existsSync(smtpEnvPath)) {
+  dotenv.config({ path: smtpEnvPath });
+} else {
+  dotenv.config();
+}
 
 // Helper to get the transporter dynamically using current process.env values
 const getTransporter = () => {
@@ -47,9 +56,11 @@ export const verifyMailConfig = async (email, password) => {
     }
 };
 
-// Updates SMTP credentials in backend/.env file and process.env runtime
+// Updates SMTP credentials in userData/smtp.env and process.env runtime
 export const updateMailConfig = async ({ email, password }) => {
-    const envPath = path.join(process.cwd(), '.env');
+    const envPath = process.env.USER_DATA_PATH
+      ? path.join(process.env.USER_DATA_PATH, 'smtp.env')
+      : path.join(process.cwd(), '.env');
     let envContent = '';
 
     if (fs.existsSync(envPath)) {

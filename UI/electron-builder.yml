@@ -1,0 +1,41 @@
+appId: com.jcbricks.manufacturing
+productName: JC Bricks
+copyright: Copyright © 2025 JC Bricks Manufacturing
+
+# Where the installer output goes (one level up from UI/)
+directories:
+  output: ../dist-installer
+  buildResources: build-assets
+
+# What gets bundled inside the app
+files:
+  - dist/**/*
+  - electron/**/*
+  - node_modules/**/*
+  - package.json
+
+# Extra files copied to resources/ (accessible via process.resourcesPath)
+extraResources:
+  - from: ../backend/.env
+    to: backend.env
+
+# Windows build config
+win:
+  icon: src/assets/icon.png
+  target:
+    - target: nsis
+      arch: x64
+
+# NSIS installer wizard config
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: JC Bricks
+  installerSidebar: src/assets/installer-sidebar.png
+  installerHeader: src/assets/installer-header.png
+  installerHeaderIcon: src/assets/icon.png
+
+# Rebuild native modules (better-sqlite3) for Electron's Node ABI
+npmRebuild: true

@@ -60,6 +60,8 @@ logs/
 # =========================
 electron/.cache/
 electron/.vite/
+electron/server-bundle.cjs
+../dist-installer/
 
 # =========================
 # Large binary assets (prevent size issues)
