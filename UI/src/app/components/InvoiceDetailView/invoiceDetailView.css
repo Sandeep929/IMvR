@@ -25,8 +25,47 @@
 }
 
 @media print {
-    .invoice-detail-header {
-        display: none;
+    /* 1. Hide Global App Layout Elements */
+    .sidebar-container, .header-container, aside, header, nav, .invoices-container {
+        display: none !important;
+    }
+
+    /* 2. Reset Global App Layout Containers */
+    html, body, #root, .app-container, .app-main, .app-content {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: auto !important;
+        min-height: auto !important;
+        overflow: visible !important;
+        position: static !important;
+        background: white !important;
+    }
+
+    /* 3. Hide Invoice Detail Header & background decorations */
+    .invoice-detail-header, .btn-close, .header-actions {
+        display: none !important;
+    }
+
+    /* 4. Reset Invoice Detail Containers */
+    .invoice-detail-container, .invoice-detail-card {
+        display: block !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        background: white !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+        max-width: none !important;
+        width: 100% !important;
+    }
+
+    .invoice-print-area {
+        display: block !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
     }
 }
 
@@ -90,63 +129,65 @@
 
 .invoice-print-area {
     padding: 2rem;
-    /* p-8 */
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    color: black;
+}
+
+.invoice-print-area p {
+    margin: 4px 0;
 }
 
 /* Print Header Section */
 .print-header-section {
-    border-bottom: 2px solid #000000;
-    padding-bottom: 1rem;
-    /* pb-4 */
-    margin-bottom: 1.5rem;
-    /* mb-6 */
+    padding-bottom: 0.2rem;
+    margin-bottom: 0;
 }
 
 .company-branding {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
-    margin-bottom: 1rem;
-    /* mb-4 */
+    margin-bottom: 0.25rem;
 }
 
-.branding-left {
+.branding-center {
+    text-align: center;
+    flex: 1;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 1rem;
-    /* gap-4 */
+    justify-content: center;
 }
 
 .company-name {
-    font-size: 1.875rem;
-    /* text-3xl */
-    margin-bottom: 0.25rem;
-    /* mb-1 */
+    font-size: 23px;
+    margin-bottom: 2px;
     margin-top: 0;
     font-weight: 700;
+    letter-spacing: 0.5px;
 }
 
 .company-address {
-    font-size: 0.875rem;
-    /* text-sm */
+    font-size: 13px;
+    color: #111;
+    font-weight: 500;
     margin: 0;
 }
 
-.brick-logo {
-    width: 6rem;
-    /* w-24 */
-    height: auto;
+.company-branding .logo-img,
+.company-branding .brick-logo {
+    width: 85px;
+    height: 85px;
+    object-fit: contain;
 }
 
 .contact-info-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1rem;
-    /* gap-4 */
-    font-size: 0.875rem;
-    /* text-sm */
-    margin-top: 0.75rem;
-    /* mt-3 */
+    font-size: 13px;
+    margin-top: 0.25rem;
 }
 
 .contact-right {
@@ -155,19 +196,16 @@
 
 .contact-info-grid p {
     margin: 0;
-    line-height: 1.5;
+    line-height: 1.4;
 }
 
 .customer-invoice-title {
-    font-size: 1.5rem;
-    /* text-2xl */
+    font-size: 1.35rem;
     text-align: center;
-    margin-bottom: 1.5rem;
-    /* mb-6 */
+    margin-bottom: 0.8rem;
     text-decoration: underline;
     text-decoration-thickness: 2px;
-    /* decoration-2 */
-    margin-top: 0;
+    margin-top: 0.2rem;
     font-weight: 700;
 }
 
@@ -178,6 +216,11 @@
     /* gap-8 */
     margin-bottom: 1.5rem;
     /* mb-6 */
+    font-size: 13px;
+}
+
+.customer-details-right {
+    text-align: right;
 }
 
 .customer-details-grid p {
@@ -191,7 +234,7 @@
     width: 100%;
     margin-bottom: 1.5rem;
     /* mb-6 */
-    border: 2px solid #000000;
+    border: 1px solid #000000;
     border-collapse: collapse;
 }
 
@@ -201,10 +244,10 @@
 
 .invoice-detail-table th,
 .invoice-detail-table td {
-    padding: 0.75rem;
-    /* p-3 */
-    border: 2px solid #000000;
+    padding: 6px 8px;
+    border: 1px solid #000000;
     text-align: center;
+    font-size: 13px;
 }
 
 .invoice-detail-table td.whitespace-nowrap {
@@ -240,12 +283,12 @@
 }
 
 .totals-right {
-    border: 2px solid #000000;
+    border: 1px solid #000000;
 }
 
 .total-row {
     display: flex;
-    border-bottom: 2px solid #000000;
+    border-bottom: 1px solid #000000;
 }
 
 .total-row:last-child {
@@ -253,19 +296,18 @@
 }
 
 .total-label {
-    padding: 0.75rem;
-    /* p-3 */
+    padding: 6px 12px;
     padding-right: 2rem;
-    /* pr-8 */
-    border-right: 2px solid #000000;
+    border-right: 1px solid #000000;
     min-width: 180px;
+    font-size: 13px;
 }
 
 .total-value {
-    padding: 0.75rem;
-    /* p-3 */
+    padding: 6px 12px;
     min-width: 140px;
     text-align: right;
+    font-size: 13px;
 }
 
 .remarks-box {
@@ -276,7 +318,6 @@
 }
 
 .remarks-box p {
-    font-size: 0.875rem;
-    /* text-sm */
+    font-size: 13px;
     margin: 0;
 }

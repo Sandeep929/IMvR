@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Search, User, LogOut, Sun, Moon, Wifi, WifiOff, RefreshCw } from 'lucide-react';
+import { Bell, Search, User, LogOut, Sun, Moon, Wifi, WifiOff, RefreshCw, Menu } from 'lucide-react';
 import './header.css';
 
-export function Header({ title, onLogout, theme, toggleTheme, onRefresh }) {
+export function Header({ title, onLogout, theme, toggleTheme, onRefresh, onToggleSidebar }) {
     const username = localStorage.getItem('username') || 'Admin';
     const [isOnline, setIsOnline] = useState(navigator.onLine);
 
@@ -22,16 +22,27 @@ export function Header({ title, onLogout, theme, toggleTheme, onRefresh }) {
     return (
         <div className="header-container">
             <div className="header-content">
-                <div className="header-title-section">
-                    <h2 className="header-title">{title}</h2>
-                    <p className="header-date">
-                        {new Date().toLocaleDateString('en-IN', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                        })}
-                    </p>
+                <div className="header-left-section" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    {onToggleSidebar && (
+                        <button
+                            onClick={onToggleSidebar}
+                            className="burger-btn"
+                            title="Toggle Menu"
+                        >
+                            <Menu size={24} />
+                        </button>
+                    )}
+                    <div className="header-title-section">
+                        <h2 className="header-title">{title}</h2>
+                        <p className="header-date">
+                            {new Date().toLocaleDateString('en-IN', {
+                                weekday: 'long',
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            })}
+                        </p>
+                    </div>
                 </div>
 
                 <div className="header-actions">

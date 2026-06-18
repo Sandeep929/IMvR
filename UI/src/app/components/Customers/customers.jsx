@@ -204,7 +204,7 @@ export function Customers() {
                             </div>
                             <div>
                                 <p className="stat-label">Total Customers</p>
-                                <p className="stat-value">{stats.total}</p>
+                                <p className="stat-value" title={stats.total.toString()}>{stats.total}</p>
                             </div>
                         </div>
                     </div>
@@ -216,7 +216,7 @@ export function Customers() {
                             </div>
                             <div>
                                 <p className="stat-label">Active Customers</p>
-                                <p className="stat-value">{stats.active}</p>
+                                <p className="stat-value" title={stats.active.toString()}>{stats.active}</p>
                             </div>
                         </div>
                     </div>
@@ -228,7 +228,7 @@ export function Customers() {
                             </div>
                             <div>
                                 <p className="stat-label">Total Revenue</p>
-                                <p className="stat-value">₹ {stats.totalRevenue.toLocaleString()}</p>
+                                <p className="stat-value" title={`₹ ${stats.totalRevenue.toLocaleString()}`}>₹ {stats.totalRevenue.toLocaleString()}</p>
                             </div>
                         </div>
                     </div>
@@ -240,7 +240,7 @@ export function Customers() {
                             </div>
                             <div>
                                 <p className="stat-label">Outstanding Balance</p>
-                                <p className="stat-value red">₹ {enrichedCustomers.reduce((s, c) => s + c.balance, 0).toLocaleString()}</p>
+                                <p className="stat-value red" title={`₹ ${enrichedCustomers.reduce((s, c) => s + c.balance, 0).toLocaleString()}`}>₹ {enrichedCustomers.reduce((s, c) => s + c.balance, 0).toLocaleString()}</p>
                             </div>
                         </div>
                     </div>
@@ -451,22 +451,22 @@ export function Customers() {
                 </div>
 
                 {filteredCustomers.length > itemsPerPage && (
-                    <div className="pagination-controls" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', padding: '1rem', backgroundColor: 'white', borderTop: '1px solid #e2e8f0' }}>
-                        <div className="text-sm text-gray-600">
+                    <div className="pagination-controls">
+                        <div className="pagination-text">
                             Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredCustomers.length)} of {filteredCustomers.length} entries
                         </div>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <div className="pagination-buttons">
                             <button 
                                 disabled={currentPage === 1} 
                                 onClick={() => setCurrentPage(p => p - 1)}
-                                style={{ padding: '0.5rem 1rem', border: '1px solid #e2e8f0', borderRadius: '0.375rem', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', backgroundColor: currentPage === 1 ? '#f8fafc' : 'white', color: currentPage === 1 ? '#94a3b8' : '#334155' }}
+                                className="pagination-btn"
                             >
                                 Previous
                             </button>
                             <button 
                                 disabled={currentPage === totalPages || totalPages === 0} 
                                 onClick={() => setCurrentPage(p => p + 1)}
-                                style={{ padding: '0.5rem 1rem', border: '1px solid #e2e8f0', borderRadius: '0.375rem', cursor: currentPage === totalPages || totalPages === 0 ? 'not-allowed' : 'pointer', backgroundColor: currentPage === totalPages || totalPages === 0 ? '#f8fafc' : 'white', color: currentPage === totalPages || totalPages === 0 ? '#94a3b8' : '#334155' }}
+                                className="pagination-btn"
                             >
                                 Next
                             </button>

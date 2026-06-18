@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Download, Search, Printer, FileText } from 'lucide-react';
 import { reportAPI, customerAPI } from '../../../services/api';
 import { SearchableDropdown } from '../ui/SearchableDropdown';
-import brickImage from '../../../assets/print-logo.jpg';
-import logo from "../../../assets/Gemini_Generated_Image_98lfx498lfx498lf.png";
+import brickImage from '../../../assets/print-logo.png';
+import logo from "../../../assets/jc-bricks.png";
 import './customerStatement.css';
 
 export function CustomerStatement() {
@@ -54,8 +54,11 @@ export function CustomerStatement() {
         }
     };
 
-    const handlePrint = async () => {
-        // Our CSS @media print block and @page rules automatically hide the sidebar/header and format the document for A4 PDF standards.
+    const handlePrintOnly = () => {
+        window.print();
+    };
+
+    const handlePdfOnly = async () => {
         if (window.windowControls && window.windowControls.printToPdf) {
             const customerPrefix = selectedCustomer ? selectedCustomer.replace(/\s+/g, '_') + '_' : '';
             const defaultFilename = `${customerPrefix}Statement_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.pdf`;
@@ -72,7 +75,6 @@ export function CustomerStatement() {
                 setLoading(false);
             }
         } else {
-            // Fallback for standard browsers
             window.print();
         }
     };
@@ -162,9 +164,8 @@ export function CustomerStatement() {
                     <label>Customer</label>
                     <SearchableDropdown
                         options={customers.map((c, i) => {
-                            const hasPhone = c.phone && c.phone.replace(/[-\s]/g, '') !== '';
                             return { 
-                                label: hasPhone ? `${c.name} - ${c.phone}` : c.name, 
+                                label: c.name, 
                                 value: c.name, 
                                 searchKey: c.name,
                                 id: c._id || c.id || i 
@@ -210,42 +211,38 @@ export function CustomerStatement() {
                 <div className="statement-preview-wrapper">
                     <div className="preview-toolbar">
                         <h3>Statement Preview</h3>
-                        <button onClick={handlePrint} className="btn-secondary">
-                            <Printer size={16} /> Print / PDF
-                        </button>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <button onClick={handlePrintOnly} className="btn-secondary">
+                                <Printer size={16} /> Print
+                            </button>
+                            <button onClick={handlePdfOnly} className="btn-secondary">
+                                <Download size={16} /> PDF
+                            </button>
+                        </div>
                     </div>
 
                     <div className="statement-document" ref={printRef}>
-                        {/* HEADER - Designed matches the reference image */}
-                        <div className="doc-header">
-                            <div className="flex justify-between items-center mb-2" style={{ padding: '0 10px' }}>
-                                {/* Left Logo */}
-                                <div style={{ width: '25%', display: 'flex', justifyContent: 'flex-start' }}>
-                                    <img src={logo} alt="logo" style={{ maxHeight: '85px', width: 'auto', objectFit: 'contain' }} />
+                        {/* HEADER */}
+                        <div className="print-header-section">
+                            <div className="company-branding">
+                                <img src={logo} alt="logo" className='logo-img' />
+                                <div className="branding-center">
+                                    <h1 className="company-name">{compName}</h1>
+                                    <p className="company-address">{compAddress}</p>
                                 </div>
-                                
-                                {/* Center Title & Address */}
-                                <div style={{ width: '50%', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                                    <h1 className="doc-title font-bold" style={{ fontSize: '26px', marginBottom: '6px', letterSpacing: '0.5px' }}>{compName}</h1>
-                                    <p style={{ fontSize: '13px', color: '#111', margin: 0, fontWeight: 500 }}>{compAddress}</p>
-                                </div>
-
-                                {/* Right Logo */}
-                                <div style={{ width: '25%', display: 'flex', justifyContent: 'flex-end' }}>
-                                    <img src={brickImage} alt="Brick" style={{ maxHeight: '85px', width: 'auto', objectFit: 'contain' }} />
-                                </div>
+                                <img src={brickImage} alt="Brick" className="brick-logo" />
                             </div>
-                            
-                            <hr className="doc-divider mt-2 mb-2 w-full" style={{ borderTopWidth: '3px', borderColor: '#dc2626' }} />
-                            
-                            <div className="contact-block flex justify-between mt-4">
+
+                            <hr className="doc-divider mt-2 mb-2 w-full" style={{ border: 'none', borderTop: '3px solid #dc2626', margin: '0.2rem 0' }} />
+
+                            <div className="contact-info-grid">
                                 <div>
                                     <p><strong>Contact No. :</strong> {compPhone}</p>
                                     <p><strong>WhatsApp No. :</strong> {compWhatsapp}</p>
                                 </div>
-                                <div className="text-right">
+                                <div className="contact-right">
                                     <p><strong>Email ID :</strong> {compEmail}</p>
-                                    <p className="mt-1">
+                                    <p style={{ marginTop: '0.2rem' }}>
                                         <strong>Date : </strong> 
                                         {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-')}
                                     </p>
@@ -254,9 +251,9 @@ export function CustomerStatement() {
                         </div>
 
                         {/* CUSTOMER INFO */}
-                        <div className="doc-customer-info text-center mt-3">
-                            <h2 className="underline font-bold text-xl inline-block">Customer Invoice</h2>
-                            <div className="text-left mt-2 flex justify-between">
+                        <div className="doc-customer-info text-center" style={{ marginTop: '0.2rem' }}>
+                            <h2 className="underline font-bold text-xl inline-block">Customer Statement</h2>
+                            <div className="text-left mt-1 flex justify-between">
                                 <div>
                                     <p><strong>Name :</strong> {selectedCustomer} Ji</p>
                                     <p><strong>Address :</strong> {currentCustomerObj.address || ''}</p>
@@ -301,9 +298,9 @@ export function CustomerStatement() {
                                         <td className="text-center">{line.pavtiNo}</td>
                                         <td className="text-center" style={{ maxWidth: '150px', wordWrap: 'break-word', whiteSpace: 'normal' }}>{line.site || '-'}</td>
                                         <td className="text-center">{line.rate}</td>
-                                        <td className="text-right">₹ {line.totalAmount.toLocaleString()}</td>
-                                        <td className="text-right">₹ {line.advanceAmount.toLocaleString()}</td>
-                                        <td className="text-right">₹ {line.balance.toLocaleString()}</td>
+                                        <td className="text-center">₹ {line.totalAmount.toLocaleString()}</td>
+                                        <td className="text-center">₹ {line.advanceAmount.toLocaleString()}</td>
+                                        <td className="text-center">₹ {line.balance.toLocaleString()}</td>
                                     </tr>
                                 ))}
                                 {statementLines.length === 0 && (

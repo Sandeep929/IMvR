@@ -66,6 +66,15 @@
     font-size: 1.5rem;
     color: var(--text-main);
     margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 1200px) {
+    .stat-value {
+        font-size: 1.15rem;
+    }
 }
 
 /* Products Content */

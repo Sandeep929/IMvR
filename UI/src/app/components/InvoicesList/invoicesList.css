@@ -5,11 +5,17 @@
     background-color: var(--bg-color);
     min-height: 100vh;
     transition: background-color 0.3s ease;
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .invoices-card {
     background-color: var(--card-bg);
     border: 1px solid var(--border-color);
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .invoices-header {
@@ -187,6 +193,15 @@
     font-size: 1.25rem;
     /* text-xl */
     margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 1200px) {
+    .summary-value {
+        font-size: 1rem;
+    }
 }
 
 .text-slate-900 {
@@ -212,12 +227,41 @@
 
 /* Table */
 .table-container {
+    width: 100%;
+    max-height: calc(100vh - 450px);
+    min-height: 200px;
     overflow-x: auto;
+    overflow-y: auto;
+    display: block;
+}
+
+/* Custom scrollbar for table container */
+.table-container::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+    display: block;
+}
+.table-container::-webkit-scrollbar-track {
+    background: var(--bg-color);
+    border-radius: 4px;
+}
+.table-container::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
 }
 
 .invoices-table {
     width: 100%;
     border-collapse: collapse;
+}
+
+.invoices-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .invoices-table thead tr {
@@ -233,6 +277,10 @@
     text-transform: uppercase;
     letter-spacing: 0.025em;
     font-weight: 600;
+    position: sticky;
+    top: 0;
+    background-color: var(--table-header-bg);
+    z-index: 10;
 }
 
 .invoices-table th.text-right {

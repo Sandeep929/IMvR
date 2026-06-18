@@ -86,11 +86,11 @@ export function InvoicesList() {
 
     const handleWhatsAppShare = (invoice) => {
         const customer = customers.find(c => c.name === invoice.customerName);
-        if (customer && (customer.whatsappNumber || customer.phone || customer.mobile)) {
-            const targetNumber = customer.whatsappNumber || customer.phone || customer.mobile;
+        const targetNumber = invoice.customerPhone || (customer ? (customer.whatsappNumber || customer.phone || customer.mobile) : null);
+        if (targetNumber) {
             shareInvoiceOnWhatsApp(invoice, targetNumber);
         } else {
-            alert("Customer phone number not found in database.");
+            alert("Customer phone number not found.");
         }
     };
 
@@ -110,7 +110,7 @@ export function InvoicesList() {
             const rate = inv.items && inv.items.length > 0 ? inv.items[0].rate : '';
 
             const customer = customers.find(c => c.name === inv.customerName);
-            const contactNo = customer ? (customer.phone || customer.mobile || '') : '';
+            const contactNo = inv.customerPhone || (customer ? (customer.phone || customer.mobile || '') : '');
             const whatsappNo = customer ? (customer.whatsappNumber || '') : '';
 
             return {
@@ -222,13 +222,22 @@ export function InvoicesList() {
     // Calculate statistics
     const stats = useMemo(() => {
         const list = filteredInvoices || [];
+        const rawTotalAmount = list.reduce((sum, inv) => sum + Number(inv?.totalAmount || 0), 0);
+        const rawTotalAdvance = list.reduce((sum, inv) => sum + Number(inv?.totalAdvance || 0), 0);
+        const rawTotalBalance = list.reduce((sum, inv) => sum + Number(inv?.balance || 0), 0);
+
+        const totalAmount = Math.round(rawTotalAmount * 100) / 100;
+        const totalAdvance = Math.round(rawTotalAdvance * 100) / 100;
+        const totalBalanceVal = Math.round(rawTotalBalance * 100) / 100;
+        const totalBalance = totalBalanceVal === 0 ? 0 : totalBalanceVal;
+
         return {
             total: list.length,
-            totalAmount: list.reduce((sum, inv) => sum + Number(inv?.totalAmount || 0), 0),
-            totalAdvance: list.reduce((sum, inv) => sum + Number(inv?.totalAdvance || 0), 0),
-            totalBalance: list.reduce((sum, inv) => sum + Number(inv?.balance || 0), 0),
-            paid: list.filter(inv => Number(inv?.balance || 0) === 0).length,
-            pending: list.filter(inv => Number(inv?.balance || 0) > 0).length
+            totalAmount,
+            totalAdvance,
+            totalBalance,
+            paid: list.filter(inv => Math.round((Number(inv?.balance || 0)) * 100) / 100 <= 0).length,
+            pending: list.filter(inv => Math.round((Number(inv?.balance || 0)) * 100) / 100 > 0).length
         };
     }, [filteredInvoices]);
 
@@ -249,6 +258,7 @@ export function InvoicesList() {
         return (
             <InvoiceDetailView
                 invoice={selectedInvoice}
+                customers={customers}
                 onClose={() => setSelectedInvoice(null)}
             />
         );
@@ -353,27 +363,27 @@ export function InvoicesList() {
                                 <FileText size={16} />
                                 <span>Invoices</span>
                             </div>
-                            <p className="summary-value text-slate-900">{stats.total}</p>
+                            <p className="summary-value text-slate-900" title={stats.total.toString()}>{stats.total}</p>
                         </div>
                         <div className="summary-card">
                             <p className="summary-label">Total Amount</p>
-                            <p className="summary-value text-slate-900">₹ {stats.totalAmount.toLocaleString()}</p>
+                            <p className="summary-value text-slate-900" title={`₹ ${stats.totalAmount.toLocaleString()}`}>₹ {stats.totalAmount.toLocaleString()}</p>
                         </div>
                         <div className="summary-card">
                             <p className="summary-label">Advance</p>
-                            <p className="summary-value text-green-700">₹ {stats.totalAdvance.toLocaleString()}</p>
+                            <p className="summary-value text-green-700" title={`₹ ${stats.totalAdvance.toLocaleString()}`}>₹ {stats.totalAdvance.toLocaleString()}</p>
                         </div>
                         <div className="summary-card">
                             <p className="summary-label">Balance</p>
-                            <p className="summary-value text-red-700">₹ {stats.totalBalance.toLocaleString()}</p>
+                            <p className="summary-value text-red-700" title={`₹ ${stats.totalBalance.toLocaleString()}`}>₹ {stats.totalBalance.toLocaleString()}</p>
                         </div>
                         <div className="summary-card">
                             <p className="summary-label">Paid</p>
-                            <p className="summary-value text-green-700">{stats.paid}</p>
+                            <p className="summary-value text-green-700" title={stats.paid.toString()}>{stats.paid}</p>
                         </div>
                         <div className="summary-card">
                             <p className="summary-label">Pending</p>
-                            <p className="summary-value text-red-700">{stats.pending}</p>
+                            <p className="summary-value text-red-700" title={stats.pending.toString()}>{stats.pending}</p>
                         </div>
                     </div>
                 </div>
@@ -419,8 +429,8 @@ export function InvoicesList() {
                                     <td className="text-right">₹ {(invoice.totalAmount || 0).toLocaleString()}</td>
                                     <td className="text-right text-green-700">₹ {(invoice.totalAdvance || 0).toLocaleString()}</td>
                                     <td className="text-right">
-                                        {invoice.balance > 0 ? (
-                                            <span className="text-red-700">₹ {(invoice.balance || 0).toLocaleString()}</span>
+                                        {Math.round((invoice.balance || 0) * 100) / 100 > 0 ? (
+                                            <span className="text-red-700">₹ {(Math.round((invoice.balance || 0) * 100) / 100).toLocaleString()}</span>
                                         ) : (
                                             <span className="text-green-700">Paid</span>
                                         )}
@@ -475,22 +485,22 @@ export function InvoicesList() {
                 </div>
 
                 {filteredInvoices.length > itemsPerPage && (
-                    <div className="pagination-controls" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', padding: '1rem', backgroundColor: 'white', borderTop: '1px solid #e2e8f0' }}>
-                        <div className="text-sm text-gray-600">
+                    <div className="pagination-controls">
+                        <div className="pagination-text">
                             Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredInvoices.length)} of {filteredInvoices.length} entries
                         </div>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <div className="pagination-buttons">
                             <button 
                                 disabled={currentPage === 1} 
                                 onClick={() => setCurrentPage(p => p - 1)}
-                                style={{ padding: '0.5rem 1rem', border: '1px solid #e2e8f0', borderRadius: '0.375rem', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', backgroundColor: currentPage === 1 ? '#f8fafc' : 'white', color: currentPage === 1 ? '#94a3b8' : '#334155' }}
+                                className="pagination-btn"
                             >
                                 Previous
                             </button>
                             <button 
                                 disabled={currentPage === totalPages || totalPages === 0} 
                                 onClick={() => setCurrentPage(p => p + 1)}
-                                style={{ padding: '0.5rem 1rem', border: '1px solid #e2e8f0', borderRadius: '0.375rem', cursor: currentPage === totalPages || totalPages === 0 ? 'not-allowed' : 'pointer', backgroundColor: currentPage === totalPages || totalPages === 0 ? '#f8fafc' : 'white', color: currentPage === totalPages || totalPages === 0 ? '#94a3b8' : '#334155' }}
+                                className="pagination-btn"
                             >
                                 Next
                             </button>

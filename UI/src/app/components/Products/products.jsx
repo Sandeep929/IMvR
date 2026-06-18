@@ -109,7 +109,7 @@ export function Products() {
                             </div>
                             <div>
                                 <p className="stat-label">Total Products</p>
-                                <p className="stat-value">{stats.total}</p>
+                                <p className="stat-value" title={stats.total.toString()}>{stats.total}</p>
                             </div>
                         </div>
                     </div>
@@ -121,7 +121,7 @@ export function Products() {
                             </div>
                             <div>
                                 <p className="stat-label">Available Items</p>
-                                <p className="stat-value">{products.filter(p => p.currentStock > 0).length}</p>
+                                <p className="stat-value" title={products.filter(p => p.currentStock > 0).length.toString()}>{products.filter(p => p.currentStock > 0).length}</p>
                             </div>
                         </div>
                     </div>
@@ -133,7 +133,7 @@ export function Products() {
                             </div>
                             <div>
                                 <p className="stat-label">Stock Value</p>
-                                <p className="stat-value">₹ {products.reduce((sum, p) => sum + (p.currentStock * p.rate), 0).toLocaleString()}</p>
+                                <p className="stat-value" title={`₹ ${products.reduce((sum, p) => sum + (p.currentStock * p.rate), 0).toLocaleString()}`}>₹ {products.reduce((sum, p) => sum + (p.currentStock * p.rate), 0).toLocaleString()}</p>
                             </div>
                         </div>
                     </div>
@@ -145,7 +145,7 @@ export function Products() {
                             </div>
                             <div>
                                 <p className="stat-label">Low Stock Items</p>
-                                <p className="stat-value">{stats.lowStock}</p>
+                                <p className="stat-value" title={stats.lowStock.toString()}>{stats.lowStock}</p>
                             </div>
                         </div>
                     </div>

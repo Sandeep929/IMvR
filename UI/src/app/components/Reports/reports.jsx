@@ -93,7 +93,7 @@ export function Reports() {
                             <IndianRupee size={16} className="stat-icon" />
                             <p className="stat-label">Total Revenue</p>
                         </div>
-                        <p className="stat-value">₹ {(summary?.totalRevenue || 0).toLocaleString()}</p>
+                        <p className="stat-value" title={`₹ ${(summary?.totalRevenue || 0).toLocaleString()}`}>₹ {(summary?.totalRevenue || 0).toLocaleString()}</p>
                         <p className="stat-trend">
                             {hasPrevData
                                 ? <><TrendIcon val={revenueGrowth} /> {fmtPct(revenueGrowth)} vs {prevPeriodLabel}</>
@@ -107,7 +107,7 @@ export function Reports() {
                             <FileText size={16} className="stat-icon" />
                             <p className="stat-label">Total Invoices</p>
                         </div>
-                        <p className="stat-value">{summary?.totalInvoices || 0}</p>
+                        <p className="stat-value" title={(summary?.totalInvoices || 0).toString()}>{summary?.totalInvoices || 0}</p>
                         <p className="stat-trend">
                             {hasPrevData
                                 ? <><TrendIcon val={invoiceGrowth} /> {fmtPct(invoiceGrowth)} vs {prevPeriodLabel} ({summary?.prevCount || 0} invoices)</>
@@ -121,7 +121,7 @@ export function Reports() {
                             <Users size={16} className="stat-icon" />
                             <p className="stat-label">Outstanding Balance</p>
                         </div>
-                        <p className="stat-value">₹ {(summary?.totalBalance || 0).toLocaleString()}</p>
+                        <p className="stat-value" title={`₹ ${(summary?.totalBalance || 0).toLocaleString()}`}>₹ {(summary?.totalBalance || 0).toLocaleString()}</p>
                         <p className="stat-trend">
                             {summary?.totalRevenue > 0
                                 ? `${((summary.totalBalance / summary.totalRevenue) * 100).toFixed(1)}% of period revenue`
@@ -135,7 +135,7 @@ export function Reports() {
                             <TrendingUp size={16} className="stat-icon" />
                             <p className="stat-label">Avg Invoice Value</p>
                         </div>
-                        <p className="stat-value">
+                        <p className="stat-value" title={`₹ ${(summary?.avgInvoiceVal || 0).toLocaleString()}`}>
                             ₹ {(summary?.avgInvoiceVal || 0).toLocaleString()}
                         </p>
                         <p className="stat-trend">

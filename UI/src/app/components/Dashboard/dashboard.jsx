@@ -164,7 +164,7 @@ export function Dashboard({ setActiveTab }) {
                                     </div>
                                 </div>
                                 <h3 className="stat-title">{stat.title}</h3>
-                                <p className="stat-value">{stat.value}</p>
+                                <p className="stat-value" title={stat.value}>{stat.value}</p>
                                 <p className="stat-change-label">{stat.changeLabel}</p>
                             </div>
                         );
@@ -179,7 +179,7 @@ export function Dashboard({ setActiveTab }) {
                             </div>
                             <div>
                                 <p className="secondary-title">Total Customers</p>
-                                <p className="secondary-value">{uniqueCustomers}</p>
+                                <p className="secondary-value" title={uniqueCustomers.toString()}>{uniqueCustomers}</p>
                             </div>
                         </div>
                         <p className="secondary-footer">Active customer base</p>
@@ -192,7 +192,7 @@ export function Dashboard({ setActiveTab }) {
                             </div>
                             <div>
                                 <p className="secondary-title">Bricks Sold</p>
-                                <p className="secondary-value">{totalQuantity.toLocaleString()}</p>
+                                <p className="secondary-value" title={totalQuantity.toLocaleString()}>{totalQuantity.toLocaleString()}</p>
                             </div>
                         </div>
                         <p className="secondary-footer">Total units delivered (all time)</p>
@@ -205,7 +205,7 @@ export function Dashboard({ setActiveTab }) {
                             </div>
                             <div>
                                 <p className="secondary-title">Avg Invoice Value</p>
-                                <p className="secondary-value">₹ {avgInvoiceValue.toLocaleString()}</p>
+                                <p className="secondary-value" title={`₹ ${avgInvoiceValue.toLocaleString()}`}>₹ {avgInvoiceValue.toLocaleString()}</p>
                             </div>
                         </div>
                         <p className="secondary-footer">Per transaction average (all time)</p>

@@ -21,6 +21,8 @@ export default function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
     const handleRefresh = () => {
         setRefreshTrigger(prev => prev + 1);
@@ -143,9 +145,27 @@ export default function App() {
         }
     };
 
+    const handleTabChange = (tabId) => {
+        setActiveTab(tabId);
+        setIsSidebarOpen(false);
+    };
+
     return (
         <div className="app-container">
-            <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+            {isSidebarOpen && (
+                <div 
+                    className="sidebar-overlay" 
+                    onClick={() => setIsSidebarOpen(false)} 
+                />
+            )}
+            <Sidebar 
+                activeTab={activeTab} 
+                setActiveTab={handleTabChange} 
+                isOpen={isSidebarOpen}
+                onClose={() => setIsSidebarOpen(false)}
+                isCollapsed={isSidebarCollapsed}
+                onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
+            />
             <div className="app-main">
                 <Header
                     title={getTitle()}
@@ -153,6 +173,7 @@ export default function App() {
                     theme={theme}
                     toggleTheme={toggleTheme}
                     onRefresh={handleRefresh}
+                    onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
                 />
                 <div className="app-content" key={refreshTrigger}>
                     {renderContent()}

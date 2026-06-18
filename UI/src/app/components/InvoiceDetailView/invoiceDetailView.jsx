@@ -1,67 +1,34 @@
 import React from 'react';
 import { Printer, Download, X } from 'lucide-react';
-import brickImage from '../../../assets/print-logo.jpg';
+import brickImage from '../../../assets/print-logo.png';
 import './invoiceDetailView.css';
-import logo from "../../../assets/Gemini_Generated_Image_98lfx498lfx498lf.png";
+import logo from "../../../assets/jc-bricks.png";
 
-export function InvoiceDetailView({ invoice, onClose }) {
+export function InvoiceDetailView({ invoice, customers = [], onClose }) {
+    const customer = customers.find(c => c.name === invoice.customerName);
+    const displayPhone = invoice.customerPhone || (customer ? (customer.phone || customer.mobile || '') : '');
+
     const handlePrint = () => {
-        const printContent = document.getElementById('invoice-print-area');
-        if (!printContent) return;
-
-        const printWindow = window.open('', '', 'width=800,height=600');
-        if (!printWindow) return;
-
-        printWindow.document.write(`
-      <html>
-        <head>
-          <title>Invoice ${invoice.pavatiNo}</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; margin: 0; }
-            * { box-sizing: border-box; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { border: 2px solid #000; padding: 8px; text-align: left; }
-            th { background-color: #f9f9f9; font-weight: 600; }
-            .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 15px; }
-            .company-name { font-size: 28px; font-weight: bold; margin: 10px 0; }
-            .contact-info { display: flex; justify-content: space-between; margin: 10px 0; font-size: 14px; }
-            .customer-section { margin: 20px 0; }
-            .customer-info { font-size: 14px; line-height: 1.6; }
-            .invoice-title { text-align: center; font-size: 24px; font-weight: bold; text-decoration: underline; margin: 20px 0; }
-            .summary-box { border: 2px solid #000; padding: 10px; margin-top: 20px; }
-            .summary-row { display: flex; justify-content: space-between; padding: 5px 0; }
-            .totals-table { width: auto; margin-left: auto; margin-top: 20px; }
-            .signature-section { margin-top: 40px; }
-            .company-branding { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-            .branding-left { display: flex; align-items: center; gap: 15px; }
-            img.logo-img { max-height: 80px; width: auto; object-fit: contain; }
-            img.brick-logo { max-height: 80px; width: auto; object-fit: contain; }
-            @media print {
-              body { margin: 0; padding: 15px; }
-              button { display: none; }
-              img.logo-img { max-height: 80px !important; width: auto !important; }
-              img.brick-logo { max-height: 80px !important; width: auto !important; }
-            }
-          </style>
-        </head>
-        <body>
-          ${printContent.innerHTML}
-        </body>
-      </html>
-    `);
-
-        printWindow.document.close();
-        printWindow.focus();
-        setTimeout(() => {
-            printWindow.print();
-            printWindow.close();
-        }, 250);
+        window.print();
     };
 
-    const handleDownloadPDF = () => {
-        // Since we are leveraging the native print window, users can select "Save as PDF"
-        // which perfectly preserves the layout.
-        handlePrint();
+    const handleDownloadPDF = async () => {
+        if (window.windowControls && window.windowControls.printToPdf) {
+            const customerPrefix = invoice.customerName ? invoice.customerName.replace(/\s+/g, '_') + '_' : '';
+            const pavatiSuffix = invoice.pavatiNo ? `Inv_${invoice.pavatiNo}_` : '';
+            const defaultFilename = `${customerPrefix}${pavatiSuffix}${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.pdf`;
+            
+            try {
+                const result = await window.windowControls.printToPdf(defaultFilename);
+                if (!result.success && result.error !== 'Canceled') {
+                    alert('Failed to save PDF: ' + result.error);
+                }
+            } catch (err) {
+                alert('Failed to generate PDF: ' + err.message);
+            }
+        } else {
+            window.print();
+        }
     };
 
     const companyInfo = JSON.parse(localStorage.getItem('companySettings') || '{}');
@@ -81,9 +48,10 @@ export function InvoiceDetailView({ invoice, onClose }) {
         ? invoice.payments
         : (invoice.advance > 0 ? [{ date: invoice.date, amount: invoice.advance, method: 'Cash', remarks: 'Advance' }] : []);
 
-    const totalAmount = invoice.totalAmount ?? invoice.amount ?? 0;
-    const totalAdvance = invoice.totalAdvance ?? invoice.advance ?? 0;
-    const balance = invoice.balance ?? 0;
+    const totalAmount = Math.round((invoice.totalAmount ?? invoice.amount ?? 0) * 100) / 100;
+    const totalAdvance = Math.round((invoice.totalAdvance ?? invoice.advance ?? 0) * 100) / 100;
+    const rawBalance = Math.round((invoice.balance ?? 0) * 100) / 100;
+    const balance = rawBalance === 0 ? 0 : rawBalance;
 
     return (
         <div className="invoice-detail-container">
@@ -118,29 +86,29 @@ export function InvoiceDetailView({ invoice, onClose }) {
                     {/* Header Section */}
                     <div className="print-header-section">
                         <div className="company-branding">
-                            <div className="branding-left">
-                                <img src={logo} alt="logo" className='logo-img' />
-                                <div>
-                                    <h1 className="company-name">{compName}</h1>
-                                    <p className="company-address">{compAddress}</p>
-                                </div>
+                            <img src={logo} alt="logo" className='logo-img' />
+                            <div className="branding-center">
+                                <h1 className="company-name">{compName}</h1>
+                                <p className="company-address">{compAddress}</p>
                             </div>
                             <img src={brickImage} alt="Brick" className="brick-logo" />
                         </div>
 
+                        <hr className="doc-divider mt-2 mb-2 w-full" style={{ border: 'none', borderTop: '3px solid #dc2626', margin: '0.2rem 0' }} />
+
                         <div className="contact-info-grid">
                             <div>
-                                <p><strong>Contact No.:</strong> {compPhone}</p>
-                                <p><strong>WhatsApp No.:</strong> {compWhatsapp}</p>
+                                <p><strong>Contact No. :</strong> {compPhone}</p>
+                                <p><strong>WhatsApp No. :</strong> {compWhatsapp}</p>
                             </div>
                             <div className="contact-right">
-                                <p><strong>Email ID:</strong> {compEmail}</p>
-                                <p style={{ marginTop: '0.5rem' }}>
-                                    <strong>Date:</strong> {new Date(invoice.date).toLocaleDateString('en-GB', {
+                                <p><strong>Email ID :</strong> {compEmail}</p>
+                                <p style={{ marginTop: '0.2rem' }}>
+                                    <strong>Date : </strong> {new Date(invoice.date).toLocaleDateString('en-GB', {
                                         day: '2-digit',
                                         month: 'short',
                                         year: '2-digit'
-                                    })}
+                                    }).replace(/ /g, '-')}
                                 </p>
                             </div>
                         </div>
@@ -152,14 +120,15 @@ export function InvoiceDetailView({ invoice, onClose }) {
                     {/* Customer Details */}
                     <div className="customer-details-grid">
                         <div>
-                            <p><strong>Name:</strong> {invoice.customerName}</p>
-                            <p><strong>Site:</strong> {invoice.site}</p>
-                            <p><strong>Vehicle No.:</strong> {invoice.vehicleNo}</p>
+                            <p><strong>Name :</strong> {invoice.customerName}</p>
+                            {displayPhone && <p><strong>Phone :</strong> {displayPhone}</p>}
+                            <p><strong>Site :</strong> {invoice.site}</p>
+                            <p><strong>Vehicle No. :</strong> {invoice.vehicleNo}</p>
                         </div>
-                        <div>
-                            <p><strong>Pavati No.:</strong> {invoice.pavatiNo}</p>
-                            {invoice.orderNo && <p><strong>Order No.:</strong> {invoice.orderNo}</p>}
-                            {invoice.marfat && <p><strong>Marfat (Via):</strong> {invoice.marfat}</p>}
+                        <div className="customer-details-right">
+                            <p><strong>Pavati No. :</strong> {invoice.pavatiNo}</p>
+                            {invoice.orderNo && <p><strong>Order No. :</strong> {invoice.orderNo}</p>}
+                            {invoice.marfat && <p><strong>Marfat (Via) :</strong> {invoice.marfat}</p>}
                         </div>
                     </div>
 
@@ -181,7 +150,7 @@ export function InvoiceDetailView({ invoice, onClose }) {
                                     <td>{item.product}</td>
                                     <td>{item.quantity}</td>
                                     <td>₹ {Number(item.rate).toFixed(2)}</td>
-                                    <td>₹ {Number(item.amount).toLocaleString()}</td>
+                                    <td>₹ {Number(Math.round((item.amount || 0) * 100) / 100).toLocaleString()}</td>
                                 </tr>
                             ))}
                         </tbody>

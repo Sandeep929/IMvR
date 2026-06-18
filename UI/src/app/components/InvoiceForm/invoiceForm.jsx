@@ -4,9 +4,12 @@ import { shareInvoiceOnWhatsApp } from '../../../utils/whatsapp';
 import { SearchableDropdown } from '../ui/SearchableDropdown';
 import './invoiceForm.css';
 
+const PREDEFINED_VEHICLES = ['MP 09 KA 1969', 'MP 09 ha 1284', 'MP 09 GF 6529'];
+
 export function InvoiceForm({ invoice, onSave, onCancel }) {
     const [customers, setCustomers] = useState([]);
     const [products, setProducts] = useState([]);
+    const [isOtherVehicle, setIsOtherVehicle] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -17,14 +20,24 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
 
                 const resProducts = await fetch('http://localhost:5000/api/products');
                 const dataProducts = await resProducts.json();
-                setProducts(dataProducts);
                 
-                if (!invoice && dataProducts.length > 0) {
+                // Sort products to put 'Fresh Bricks' first
+                const sortedProducts = [...dataProducts].sort((a, b) => {
+                    const nameA = a.name || '';
+                    const nameB = b.name || '';
+                    if (nameA.toLowerCase() === 'fresh bricks') return -1;
+                    if (nameB.toLowerCase() === 'fresh bricks') return 1;
+                    return nameA.localeCompare(nameB);
+                });
+
+                setProducts(sortedProducts);
+                
+                if (!invoice && sortedProducts.length > 0) {
                     setFormData(prev => {
                         if (prev.items.length === 1 && prev.items[0].product === '') {
                             const newItems = [...prev.items];
-                            newItems[0].product = dataProducts[0].name;
-                            newItems[0].rate = dataProducts[0].rate;
+                            newItems[0].product = sortedProducts[0].name;
+                            newItems[0].rate = sortedProducts[0].rate;
                             return { ...prev, items: newItems };
                         }
                         return prev;
@@ -43,6 +56,7 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
         pavatiNo: '',
         orderNo: '',
         customerName: '',
+        customerPhone: '',
         site: '',
         vehicleNo: '',
         marfat: '',
@@ -64,17 +78,28 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
             setFormData({
                 ...invoice,
                 date: invoice.date ? new Date(invoice.date).toISOString().split('T')[0] : '',
-                items: invoice.items || [{ product: '', quantity: 0, rate: 0, amount: 0 }],
-                payments: invoice.payments || [{ date: new Date().toISOString().split('T')[0], amount: 0, method: 'Cash', remarks: 'Advance' }]
+                customerPhone: invoice.customerPhone || '',
+                items: (invoice.items || [{ product: '', quantity: 0, rate: 0, amount: 0 }]).map(item => ({
+                    ...item,
+                    amount: Math.round((item.amount || 0) * 100) / 100
+                })),
+                payments: (invoice.payments || [{ date: new Date().toISOString().split('T')[0], amount: 0, method: 'Cash', remarks: 'Advance' }]).map(p => ({
+                    ...p,
+                    amount: Math.round((parseFloat(p.amount) || 0) * 100) / 100
+                }))
             });
+            const isCustom = invoice.vehicleNo && !PREDEFINED_VEHICLES.includes(invoice.vehicleNo);
+            setIsOtherVehicle(!!isCustom);
+        } else {
+            setIsOtherVehicle(false);
         }
     }, [invoice]);
 
     // Recalculate totals whenever items or payments change
     useEffect(() => {
-        const totalAmount = formData.items.reduce((sum, item) => sum + (item.amount || 0), 0);
-        const totalAdvance = formData.payments.reduce((sum, payment) => sum + (parseFloat(payment.amount) || 0), 0);
-        const balance = totalAmount - totalAdvance;
+        const totalAmount = Math.round(formData.items.reduce((sum, item) => sum + (item.amount || 0), 0) * 100) / 100;
+        const totalAdvance = Math.round(formData.payments.reduce((sum, payment) => sum + (parseFloat(payment.amount) || 0), 0) * 100) / 100;
+        const balance = Math.round((totalAmount - totalAdvance) * 100) / 100;
 
         setFormData(prev => ({
             ...prev,
@@ -103,7 +128,7 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
 
         const qty = parseFloat(newItems[index].quantity) || 0;
         const rate = parseFloat(newItems[index].rate) || 0;
-        newItems[index].amount = qty * rate;
+        newItems[index].amount = Math.round(qty * rate * 100) / 100;
         
         setFormData(prev => ({ ...prev, items: newItems }));
     };
@@ -193,27 +218,69 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                                     <label className="form-label">Customer Name <span className="required">*</span></label>
                                     <SearchableDropdown
                                         options={customers.map((c, i) => {
-                                            const hasPhone = c.phone && c.phone.replace(/[-\s]/g, '') !== '';
                                             return { 
-                                                label: hasPhone ? `${c.name} - ${c.phone}` : c.name, 
+                                                label: c.name, 
                                                 value: c.name, 
                                                 searchKey: c.name,
                                                 id: c._id || c.id || i 
                                             };
                                         })}
                                         value={formData.customerName}
-                                        onChange={(val) => handleChange({ target: { name: 'customerName', value: val } })}
+                                        onChange={(val) => {
+                                            const selectedCustomer = customers.find(c => c.name === val);
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                customerName: val,
+                                                customerPhone: selectedCustomer ? (selectedCustomer.phone || selectedCustomer.mobile || '') : prev.customerPhone
+                                            }));
+                                        }}
                                         placeholder="Select Customer..."
                                     />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Customer Phone</label>
+                                    <input type="text" name="customerPhone" value={formData.customerPhone} onChange={handleChange} className="form-input-i" placeholder="Enter customer phone" />
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Site Location <span className="required">*</span></label>
                                     <input type="text" name="site" value={formData.site} onChange={handleChange} required className="form-input-i" placeholder="Enter site location" />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Vehicle Number <span className="required">*</span></label>
-                                    <input type="text" name="vehicleNo" value={formData.vehicleNo} onChange={handleChange} required className="form-input-i" placeholder="Enter vehicle number" />
-                                </div>
+                                     <label className="form-label">Vehicle Number <span className="required">*</span></label>
+                                     <select
+                                         value={isOtherVehicle ? 'Other' : (PREDEFINED_VEHICLES.includes(formData.vehicleNo) ? formData.vehicleNo : '')}
+                                         onChange={(e) => {
+                                             const val = e.target.value;
+                                             if (val === 'Other') {
+                                                 setIsOtherVehicle(true);
+                                                 setFormData(prev => ({ ...prev, vehicleNo: '' }));
+                                             } else {
+                                                 setIsOtherVehicle(false);
+                                                 setFormData(prev => ({ ...prev, vehicleNo: val }));
+                                             }
+                                         }}
+                                         required
+                                         className="form-select-i"
+                                     >
+                                         <option value="" disabled>Select Vehicle...</option>
+                                         {PREDEFINED_VEHICLES.map(v => (
+                                             <option key={v} value={v}>{v}</option>
+                                         ))}
+                                         <option value="Other">Other</option>
+                                     </select>
+                                     {isOtherVehicle && (
+                                         <input
+                                             type="text"
+                                             name="vehicleNo"
+                                             value={formData.vehicleNo}
+                                             onChange={handleChange}
+                                             required
+                                             className="form-input-i"
+                                             style={{ marginTop: '8px' }}
+                                             placeholder="Enter vehicle number"
+                                         />
+                                     )}
+                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Marfat (Via)</label>
                                     <input type="text" name="marfat" value={formData.marfat} onChange={handleChange} className="form-input-i" placeholder="Enter via/through" />

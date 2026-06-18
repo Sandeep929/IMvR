@@ -136,7 +136,7 @@
     max-width: 900px;
     margin: 0 auto;
     font-family: Arial, sans-serif;
-    font-size: 12px;
+    font-size: 13px;
     width: 100%;
 }
 
@@ -159,14 +159,22 @@
     border-top-width: 2px;
 }
 
+.doc-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
 .doc-table th, .doc-table td {
-    border: 1px solid black;
-    padding: 6px 4px;
+    border: 1px solid #000000;
+    padding: 6px 8px;
+    font-size: 13px;
 }
 
 .doc-table th {
     font-weight: bold;
     text-align: center;
+    background-color: #f8fafc;
 }
 
 .totals-right > div > span:first-child {
@@ -178,7 +186,7 @@
 }
 
 .totals-grid > div.border {
-    border: 2px solid black;
+    border: 1px solid black;
 }
 
 /* Utilities inside React component output */
@@ -186,7 +194,7 @@
 .text-right { text-align: right; }
 .text-left { text-align: left; }
 .font-bold { font-weight: bold; }
-.text-xl { font-size: 1.25rem; }
+.text-xl { font-size: 1.35rem; }
 .underline { text-decoration: underline; }
 .flex { display: flex; }
 .justify-between { justify-content: space-between; }
@@ -312,3 +320,63 @@
     }
 }
 
+/* Invoice Header Style Matching */
+.print-header-section {
+    padding-bottom: 0.2rem;
+    margin-bottom: 0;
+}
+
+.company-branding {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+}
+
+.branding-center {
+    text-align: center;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.company-name {
+    font-size: 23px;
+    margin-bottom: 2px;
+    margin-top: 0;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.company-address {
+    font-size: 13px;
+    color: #111;
+    font-weight: 500;
+    margin: 0;
+}
+
+.company-branding .logo-img,
+.company-branding .brick-logo {
+    width: 85px;
+    height: 85px;
+    object-fit: contain;
+}
+
+.contact-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    font-size: 13px;
+    margin-top: 0.25rem;
+}
+
+.contact-right {
+    text-align: right;
+}
+
+.contact-info-grid p {
+    margin: 0;
+    line-height: 1.4;
+}

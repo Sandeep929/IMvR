@@ -102,6 +102,15 @@
     color: var(--text-main);
     margin-bottom: 0.25rem;
     margin-top: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 1200px) {
+    .stat-value {
+        font-size: 1.15rem;
+    }
 }
 
 .stat-change-label {
@@ -166,6 +175,15 @@
     font-size: 1.5rem;
     color: var(--text-main);
     margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 1200px) {
+    .secondary-value {
+        font-size: 1.15rem;
+    }
 }
 
 .secondary-footer {

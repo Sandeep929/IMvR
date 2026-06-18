@@ -193,3 +193,26 @@
     color: #dc2626;
     /* hover:text-red-600 */
 }
+
+.burger-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text-main);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 9999px;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.burger-btn:hover {
+    background-color: var(--hover-bg);
+}
+
+@media (max-width: 768px) {
+    .burger-btn {
+        display: flex;
+    }
+}

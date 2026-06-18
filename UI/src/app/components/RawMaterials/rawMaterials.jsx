@@ -177,12 +177,12 @@ export function RawMaterials() {
                 <div className="rm-stat-row">
                     <div className="rm-stat-card blue">
                         <div className="rm-stat-label">Total Records</div>
-                        <div className="rm-stat-value">{expenses.length}</div>
+                        <div className="rm-stat-value" title={expenses.length.toString()}>{expenses.length}</div>
                         <div className="rm-stat-sub">all time</div>
                     </div>
                     <div className="rm-stat-card green">
                         <div className="rm-stat-label">This Month</div>
-                        <div className="rm-stat-value">
+                        <div className="rm-stat-value" title={`₹ ${monthSpend.toLocaleString()}`}>
                             ₹{monthSpend >= 100000
                                 ? (monthSpend / 100000).toFixed(1) + 'L'
                                 : monthSpend.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
@@ -191,7 +191,7 @@ export function RawMaterials() {
                     </div>
                     <div className="rm-stat-card amber">
                         <div className="rm-stat-label">Total Spend</div>
-                        <div className="rm-stat-value">
+                        <div className="rm-stat-value" title={`₹ ${totalSpend.toLocaleString()}`}>
                             ₹{totalSpend >= 100000
                                 ? (totalSpend / 100000).toFixed(1) + 'L'
                                 : totalSpend.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
@@ -200,7 +200,7 @@ export function RawMaterials() {
                     </div>
                     <div className="rm-stat-card red">
                         <div className="rm-stat-label">Materials</div>
-                        <div className="rm-stat-value">{uniqueMats}</div>
+                        <div className="rm-stat-value" title={uniqueMats.toString()}>{uniqueMats}</div>
                         <div className="rm-stat-sub">unique tracked</div>
                     </div>
                 </div>
