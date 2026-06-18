@@ -11,6 +11,7 @@ const invoiceSchema = new mongoose.Schema({
     orderNo: { type: String },
     date: { type: Date, required: true },
     customerName: { type: String, required: true },
+    customerPhone: { type: String },
     site: { type: String },
     vehicleNo: { type: String },
     items: [{

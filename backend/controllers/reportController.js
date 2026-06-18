@@ -337,7 +337,7 @@ export const getMasterData = (req, res) => {
     const { customerName, startDate, endDate } = req.query;
 
     let query = `
-      SELECT i.*, c.phone as customerPhone 
+      SELECT i.*, COALESCE(i.customerPhone, c.phone) as customerPhone 
       FROM invoices i
       LEFT JOIN customers c ON i.customerName = c.name
       WHERE i.isDeleted = 0

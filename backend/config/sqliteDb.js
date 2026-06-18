@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS invoices (
   orderNo TEXT,
   date TEXT NOT NULL,
   customerName TEXT NOT NULL,
+  customerPhone TEXT,
   site TEXT,
   vehicleNo TEXT,
   totalAmount REAL NOT NULL DEFAULT 0,
@@ -168,6 +169,13 @@ try {
   // Ignore if column already exists
 }
 
+/* Specific migration for customerPhone in invoices */
+try {
+  db.exec(`ALTER TABLE invoices ADD COLUMN customerPhone TEXT`);
+} catch (err) {
+  // Ignore if column already exists
+}
+
 /* Remove UNIQUE constraint from pavatiNo */
 try {
   const invoicesTableInfo = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='invoices'").get();
@@ -180,6 +188,7 @@ try {
         orderNo TEXT,
         date TEXT NOT NULL,
         customerName TEXT NOT NULL,
+        customerPhone TEXT,
         site TEXT,
         vehicleNo TEXT,
         totalAmount REAL NOT NULL DEFAULT 0,
@@ -192,7 +201,14 @@ try {
         isDeleted INTEGER DEFAULT 0,
         synced INTEGER DEFAULT 0
       );
-      INSERT INTO invoices_new SELECT * FROM invoices;
+      INSERT INTO invoices_new (
+        uuid, pavatiNo, orderNo, date, customerName, customerPhone, site, vehicleNo,
+        totalAmount, totalAdvance, balance, marfat, remarks, createdAt, updatedAt, isDeleted, synced
+      )
+      SELECT
+        uuid, pavatiNo, orderNo, date, customerName, customerPhone, site, vehicleNo,
+        totalAmount, totalAdvance, balance, marfat, remarks, createdAt, updatedAt, isDeleted, synced
+      FROM invoices;
       DROP TABLE invoices;
       ALTER TABLE invoices_new RENAME TO invoices;
     `);
