@@ -1,13 +1,13 @@
 {
   "name": "@figma/my-make-file",
   "private": true,
-  "version": "0.0.2",
+  "version": "0.0.3",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
     "build": "vite build",
     "dev": "vite",
-    "electron": "npm run build && electron .",
+    "electron": "npm run build && npm run bundle-backend && electron .",
     "bundle-backend": "node -e \"require('esbuild').buildSync({entryPoints:['../backend/server.js'],bundle:true,platform:'node',format:'cjs',external:['better-sqlite3'],outfile:'electron/server-bundle.cjs',logLevel:'info'})\"",
     "build:win": "npm run build && npm run bundle-backend && node -e \"process.env.ELECTRON_BUILDER_BINARIES_MIRROR='https://npmmirror.com/mirrors/electron-builder-binaries/';require('child_process').execSync('npx electron-builder --win',{stdio:'inherit',cwd:__dirname})\""
   },
