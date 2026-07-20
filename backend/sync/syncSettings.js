@@ -1,6 +1,13 @@
 import db from '../config/sqliteDb.js';
 import Setting from '../models/Setting.js';
 
+const safeDateISO = (d) => {
+  if (!d) return new Date().toISOString();
+  if (d instanceof Date) return d.toISOString();
+  const parsed = new Date(d);
+  return isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString();
+};
+
 export const syncSettings = async () => {
     // 1. PUSH: Local SQLite -> Cloud MongoDB
     const unsynced = db.prepare('SELECT * FROM settings WHERE synced = 0').all();
@@ -31,6 +38,12 @@ export const syncSettings = async () => {
         const stateRow = db.prepare(`SELECT lastSync FROM sync_state WHERE entity = 'settings'`).get();
         let lastSyncTime = stateRow ? new Date(stateRow.lastSync) : new Date(0);
 
+        const localCount = db.prepare(`SELECT COUNT(*) as cnt FROM settings`).get();
+        if (localCount.cnt === 0) {
+            console.log('Settings table empty — forcing full pull from cloud...');
+            lastSyncTime = new Date(0);
+        }
+
         const updatedInCloud = await Setting.find({ 
             $or: [
                 { updatedAt: { $gt: lastSyncTime } },
@@ -50,11 +63,12 @@ export const syncSettings = async () => {
             
             const transaction = db.transaction((settingsObj) => {
                 for (const c of settingsObj) {
+                    if (!c.category || !c.key) continue;
                     stmt.run(
-                        c.category, 
-                        c.key, 
-                        c.value, 
-                        c.updatedAt ? c.updatedAt.toISOString() : new Date().toISOString()
+                        c.category || '', 
+                        c.key || '', 
+                        c.value || '', 
+                        safeDateISO(c.updatedAt)
                     );
                 }
             });

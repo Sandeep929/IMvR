@@ -1,6 +1,13 @@
 import db from '../config/sqliteDb.js';
 import Invoice from '../models/Invoice.js';
 
+const safeDateISO = (d) => {
+  if (!d) return new Date().toISOString();
+  if (d instanceof Date) return d.toISOString();
+  const parsed = new Date(d);
+  return isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString();
+};
+
 export const syncInvoices = async () => {
   // 1. PUSH: Local SQLite -> Cloud MongoDB
   const unsynced = db.prepare(`
@@ -18,20 +25,20 @@ export const syncInvoices = async () => {
         { uuid: inv.uuid },
         {
           uuid: inv.uuid,
-          pavatiNo: inv.pavatiNo,
-          orderNo: inv.orderNo,
-          date: inv.date,
-          customerName: inv.customerName,
-          customerPhone: inv.customerPhone,
-          site: inv.site,
-          vehicleNo: inv.vehicleNo,
-          items: items.map(i => ({ product: i.product, quantity: i.quantity, rate: i.rate, amount: i.amount })),
-          payments: payments.map(p => ({ date: p.date, amount: p.amount, method: p.method, remarks: p.remarks })),
-          totalAmount: inv.totalAmount,
-          totalAdvance: inv.totalAdvance,
-          balance: inv.balance,
-          marfat: inv.marfat,
-          remarks: inv.remarks,
+          pavatiNo: inv.pavatiNo || '',
+          orderNo: inv.orderNo || '',
+          date: inv.date || new Date().toISOString(),
+          customerName: inv.customerName || '',
+          customerPhone: inv.customerPhone || '',
+          site: inv.site || '',
+          vehicleNo: inv.vehicleNo || '',
+          items: items.map(i => ({ product: i.product || '', quantity: i.quantity || 0, rate: i.rate || 0, amount: i.amount || 0 })),
+          payments: payments.map(p => ({ date: p.date || new Date().toISOString(), amount: p.amount || 0, method: p.method || '', remarks: p.remarks || '' })),
+          totalAmount: inv.totalAmount || 0,
+          totalAdvance: inv.totalAdvance || 0,
+          balance: inv.balance || 0,
+          marfat: inv.marfat || '',
+          remarks: inv.remarks || '',
           createdAt: inv.createdAt || new Date().toISOString(),
           updatedAt: inv.updatedAt || new Date().toISOString(),
           isDeleted: inv.isDeleted === 1
@@ -109,15 +116,25 @@ export const syncInvoices = async () => {
 
       const transaction = db.transaction((invoicesFromCloud) => {
         for (const inv of invoicesFromCloud) {
+          if (!inv.uuid) continue;
+
           // 1. Insert/Update main invoice record
           insertOrUpdateInvoice.run(
-            inv.uuid, inv.pavatiNo, inv.orderNo, 
-            inv.date ? inv.date.toISOString() : null, 
-            inv.customerName, inv.customerPhone, inv.site, inv.vehicleNo, 
-            inv.totalAmount || 0, inv.totalAdvance || 0, inv.balance || 0, 
-            inv.marfat || '', inv.remarks || '', 
-            inv.createdAt ? inv.createdAt.toISOString() : null,
-            inv.updatedAt ? inv.updatedAt.toISOString() : null,
+            inv.uuid,
+            inv.pavatiNo || '',
+            inv.orderNo || '', 
+            safeDateISO(inv.date), 
+            inv.customerName || '',
+            inv.customerPhone || '',
+            inv.site || '',
+            inv.vehicleNo || '', 
+            inv.totalAmount || 0,
+            inv.totalAdvance || 0,
+            inv.balance || 0, 
+            inv.marfat || '',
+            inv.remarks || '', 
+            safeDateISO(inv.createdAt),
+            safeDateISO(inv.updatedAt),
             inv.isDeleted ? 1 : 0
           );
 
@@ -125,7 +142,13 @@ export const syncInvoices = async () => {
           deleteItems.run(inv.uuid);
           if (inv.items && inv.items.length > 0) {
             for (const item of inv.items) {
-              insertItem.run(inv.uuid, item.product, item.quantity, item.rate, item.amount);
+              insertItem.run(
+                inv.uuid,
+                item.product || '',
+                item.quantity || 0,
+                item.rate || 0,
+                item.amount || 0
+              );
             }
           }
 
@@ -133,7 +156,13 @@ export const syncInvoices = async () => {
           deletePayments.run(inv.uuid);
           if (inv.payments && inv.payments.length > 0) {
             for (const payment of inv.payments) {
-              insertPayment.run(inv.uuid, payment.date ? payment.date.toISOString() : null, payment.amount, payment.method, payment.remarks);
+              insertPayment.run(
+                inv.uuid,
+                safeDateISO(payment.date),
+                payment.amount || 0,
+                payment.method || '',
+                payment.remarks || ''
+              );
             }
           }
         }

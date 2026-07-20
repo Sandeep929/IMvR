@@ -2,6 +2,13 @@ import db from '../config/sqliteDb.js';
 import Product from '../models/Product.js';
 import { v4 as uuidv4 } from 'uuid';
 
+const safeDateISO = (d) => {
+  if (!d) return new Date().toISOString();
+  if (d instanceof Date) return d.toISOString();
+  const parsed = new Date(d);
+  return isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString();
+};
+
 export const syncProducts = async () => {
   // 1. PUSH: Local SQLite -> Cloud MongoDB
   const unsynced = db.prepare(`
@@ -15,13 +22,13 @@ export const syncProducts = async () => {
         { uuid: prodUuid },
         {
           uuid: prodUuid,
-          name: p.name,
-          category: p.category,
-          description: p.description,
-          rate: p.rate,
-          unit: p.unit,
-          minStock: p.minStock,
-          currentStock: p.currentStock,
+          name: p.name || '',
+          category: p.category || '',
+          description: p.description || '',
+          rate: p.rate || 0,
+          unit: p.unit || '',
+          minStock: p.minStock || 0,
+          currentStock: p.currentStock || 0,
           createdAt: p.createdAt || new Date().toISOString(),
           updatedAt: p.updatedAt || new Date().toISOString(),
           isDeleted: p.isDeleted === 1
@@ -81,9 +88,16 @@ export const syncProducts = async () => {
           // Skip if missing UUID from Mongo
           if (!p.uuid) continue; 
           insertOrUpdate.run(
-            p.uuid, p.name, p.category, p.description, p.rate, p.unit, p.minStock, p.currentStock,
-            p.createdAt ? p.createdAt.toISOString() : null,
-            p.updatedAt ? p.updatedAt.toISOString() : null,
+            p.uuid,
+            p.name || '',
+            p.category || '',
+            p.description || '',
+            p.rate || 0,
+            p.unit || '',
+            p.minStock || 0,
+            p.currentStock || 0,
+            safeDateISO(p.createdAt),
+            safeDateISO(p.updatedAt),
             p.isDeleted ? 1 : 0
           );
         }

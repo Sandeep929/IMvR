@@ -7,25 +7,29 @@ import { syncSettings } from './syncSettings.js';
 import { syncRawMaterials } from './syncRawMaterials.js';
 
 export const startAutoSync = () => {
+  const runSync = async () => {
+    try {
+      if (await isOnline()) {
+        console.log("Online — syncing data...");
 
-  setInterval(async () => {
+        await syncCustomers();
+        await syncProducts();
+        await syncInvoices();
+        await syncSettings();
+        await syncRawMaterials();
 
-    if (await isOnline()) {
-
-      console.log("Online — syncing data...");
-
-      await syncCustomers();
-      await syncProducts();
-      await syncInvoices();
-      await syncSettings();
-      await syncRawMaterials();
-
-      console.log("Sync complete ✔");
-
-    } else {
-      console.log("Offline — sync skipped");
+        console.log("Sync complete ✔");
+      } else {
+        console.log("Offline — sync skipped");
+      }
+    } catch (err) {
+      console.error("Sync error:", err);
     }
+  };
 
-  }, 30000); // every 30 seconds
+  // Run immediately on startup
+  runSync();
 
+  // Run every 30 seconds
+  setInterval(runSync, 30000);
 };

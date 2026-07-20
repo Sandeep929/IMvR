@@ -1,6 +1,13 @@
 import db from '../config/sqliteDb.js';
 import Customer from '../models/Customer.js';
 
+const safeDateISO = (d) => {
+  if (!d) return new Date().toISOString();
+  if (d instanceof Date) return d.toISOString();
+  const parsed = new Date(d);
+  return isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString();
+};
+
 export const syncCustomers = async () => {
   // 1. PUSH: Local SQLite -> Cloud MongoDB
   const unsynced = db.prepare(`
@@ -13,11 +20,11 @@ export const syncCustomers = async () => {
         { uuid: c.uuid },
         {
           uuid: c.uuid,
-          name: c.name,
-          phone: c.phone,
+          name: c.name || '',
+          phone: c.phone || '',
           whatsappNumber: c.whatsappNumber || null,
-          email: c.email,
-          address: c.address,
+          email: c.email || '',
+          address: c.address || '',
           createdAt: c.createdAt || new Date().toISOString(),
           updatedAt: c.updatedAt || new Date().toISOString(),
           isDeleted: c.isDeleted === 1
@@ -40,6 +47,12 @@ export const syncCustomers = async () => {
     // Get last sync time for customers
     const stateRow = db.prepare(`SELECT lastSync FROM sync_state WHERE entity = 'customers'`).get();
     let lastSyncTime = stateRow ? new Date(stateRow.lastSync) : new Date(0);
+
+    const localCount = db.prepare(`SELECT COUNT(*) as cnt FROM customers`).get();
+    if (localCount.cnt === 0) {
+      console.log('Customers table empty — forcing full pull from cloud...');
+      lastSyncTime = new Date(0);
+    }
 
     // Find customers modified in Mongo *after* our last sync time, or fallback to createdAt
     const updatedInCloud = await Customer.find({
@@ -67,15 +80,16 @@ export const syncCustomers = async () => {
 
       const transaction = db.transaction((customers) => {
         for (const c of customers) {
+          if (!c.uuid) continue;
           insertOrUpdate.run(
             c.uuid, 
-            c.name, 
-            c.phone, 
+            c.name || '', 
+            c.phone || '', 
             c.whatsappNumber || null,
-            c.email, 
-            c.address, 
-            c.createdAt ? c.createdAt.toISOString() : null,
-            c.updatedAt ? c.updatedAt.toISOString() : null,
+            c.email || '', 
+            c.address || '', 
+            safeDateISO(c.createdAt),
+            safeDateISO(c.updatedAt),
             c.isDeleted ? 1 : 0
           );
         }

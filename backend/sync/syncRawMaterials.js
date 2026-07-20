@@ -2,6 +2,13 @@ import db from '../config/sqliteDb.js';
 import RawMaterial from '../models/RawMaterial.js';
 import RawMaterialExpense from '../models/RawMaterialExpense.js';
 
+const safeDateISO = (d) => {
+  if (!d) return new Date().toISOString();
+  if (d instanceof Date) return d.toISOString();
+  const parsed = new Date(d);
+  return isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString();
+};
+
 export const syncRawMaterials = async () => {
 
     // ── PUSH: Local SQLite → Cloud MongoDB ──────────────────────────────────
@@ -14,7 +21,7 @@ export const syncRawMaterials = async () => {
                 { uuid: m.uuid },
                 {
                     uuid: m.uuid,
-                    name: m.name,
+                    name: m.name || '',
                     unit: m.unit || null,
                     currentStock: m.currentStock || 0,
                     createdAt: m.createdAt || new Date().toISOString(),
@@ -38,12 +45,12 @@ export const syncRawMaterials = async () => {
                 { uuid: e.uuid },
                 {
                     uuid: e.uuid,
-                    date: e.date,
-                    materialName: e.materialName,
-                    quantity: e.quantity,
-                    rate: e.rate,
+                    date: e.date || new Date().toISOString(),
+                    materialName: e.materialName || '',
+                    quantity: e.quantity || 0,
+                    rate: e.rate || 0,
                     supplier: e.supplier || null,
-                    totalCost: e.totalCost,
+                    totalCost: e.totalCost || 0,
                     notes: e.notes || null,
                     createdAt: e.createdAt || new Date().toISOString(),
                     updatedAt: e.updatedAt || new Date().toISOString(),
@@ -95,10 +102,14 @@ export const syncRawMaterials = async () => {
 
             const txnMat = db.transaction((mats) => {
                 for (const m of mats) {
+                    if (!m.uuid) continue;
                     upsertMat.run(
-                        m.uuid, m.name, m.unit || null, m.currentStock || 0,
-                        m.createdAt ? m.createdAt.toISOString() : null,
-                        m.updatedAt ? m.updatedAt.toISOString() : null,
+                        m.uuid,
+                        m.name || '',
+                        m.unit || null,
+                        m.currentStock || 0,
+                        safeDateISO(m.createdAt),
+                        safeDateISO(m.updatedAt),
                         m.isDeleted ? 1 : 0
                     );
                 }
@@ -119,7 +130,13 @@ export const syncRawMaterials = async () => {
     // Pull raw_material_expenses
     try {
         const expStateRow = db.prepare(`SELECT lastSync FROM sync_state WHERE entity = 'raw_material_expenses'`).get();
-        const expLastSync = expStateRow ? new Date(expStateRow.lastSync) : new Date(0);
+        let expLastSync = expStateRow ? new Date(expStateRow.lastSync) : new Date(0);
+
+        const expLocalCount = db.prepare(`SELECT COUNT(*) as cnt FROM raw_material_expenses`).get();
+        if (expLocalCount.cnt === 0) {
+            console.log('Raw material expenses table empty — forcing full pull from cloud...');
+            expLastSync = new Date(0);
+        }
 
         const cloudExpenses = await RawMaterialExpense.find({
             $or: [
@@ -149,13 +166,18 @@ export const syncRawMaterials = async () => {
 
             const txnExp = db.transaction((expenses) => {
                 for (const e of expenses) {
+                    if (!e.uuid) continue;
                     upsertExp.run(
                         e.uuid,
-                        e.date ? (e.date instanceof Date ? e.date.toISOString().split('T')[0] : e.date) : null,
-                        e.materialName, e.quantity, e.rate,
-                        e.supplier || null, e.totalCost, e.notes || null,
-                        e.createdAt ? e.createdAt.toISOString() : null,
-                        e.updatedAt ? e.updatedAt.toISOString() : null,
+                        e.date ? (e.date instanceof Date ? e.date.toISOString().split('T')[0] : String(e.date).split('T')[0]) : new Date().toISOString().split('T')[0],
+                        e.materialName || '',
+                        e.quantity || 0,
+                        e.rate || 0,
+                        e.supplier || null,
+                        e.totalCost || 0,
+                        e.notes || null,
+                        safeDateISO(e.createdAt),
+                        safeDateISO(e.updatedAt),
                         e.isDeleted ? 1 : 0
                     );
                 }
