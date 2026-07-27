@@ -24,9 +24,16 @@
     justify-content: space-between;
 }
 
+/* Standard PDF Page Size */
+@page {
+    size: A4;
+    margin: 0;
+}
+
+/* Printing Rules */
 @media print {
     /* 1. Hide Global App Layout Elements */
-    .sidebar-container, .header-container, aside, header, nav, .invoices-container {
+    .sidebar-container, .header-container, aside, header, nav, .invoices-container, .invoice-detail-header, .btn-close, .header-actions {
         display: none !important;
     }
 
@@ -250,8 +257,8 @@
     font-size: 13px;
 }
 
-.invoice-detail-table td.whitespace-nowrap {
-    white-space: nowrap;
+.invoice-detail-table td:nth-child(2) {
+    text-align: center;
 }
 
 /* Totals Section */

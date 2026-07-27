@@ -3,7 +3,8 @@ import { Download, Search, Printer, FileText } from 'lucide-react';
 import { reportAPI, customerAPI } from '../../../services/api';
 import { SearchableDropdown } from '../ui/SearchableDropdown';
 import brickImage from '../../../assets/print-logo.png';
-import logo from "../../../assets/jc-bricks.png";
+import logo from "../../../assets/jc-bricks.webp";
+import { generateCustomerStatementPDF } from '../../../services/pdfGenerator';
 import './customerStatement.css';
 
 export function CustomerStatement() {
@@ -41,7 +42,11 @@ export function CustomerStatement() {
             setLoading(true);
             setError(null);
             
-            const params = { customerName: selectedCustomer };
+            const customerObj = customers.find(c => c.name === selectedCustomer);
+            const params = { 
+                customerName: selectedCustomer,
+                customerUuid: customerObj ? (customerObj.uuid || customerObj._id || customerObj.id) : undefined
+            };
             if (startDate) params.startDate = startDate;
             if (endDate) params.endDate = endDate;
 
@@ -54,28 +59,70 @@ export function CustomerStatement() {
         }
     };
 
-    const handlePrintOnly = () => {
-        window.print();
+    const handlePrintOnly = async () => {
+        if (!statementData) return;
+        try {
+            setLoading(true);
+            const doc = await generateCustomerStatementPDF(
+                statementData,
+                {
+                    name: selectedCustomer,
+                    address: currentCustomerObj.address,
+                    phone: currentCustomerObj.phone,
+                    email: currentCustomerObj.email
+                },
+                companyInfo,
+                { margin: 4 }
+            );
+            const blob = doc.output('blob');
+            const blobUrl = URL.createObjectURL(blob);
+            let iframe = document.getElementById('pdf-print-iframe');
+            if (!iframe) {
+                iframe = document.createElement('iframe');
+                iframe.id = 'pdf-print-iframe';
+                iframe.style.position = 'fixed';
+                iframe.style.width = '0px';
+                iframe.style.height = '0px';
+                iframe.style.border = 'none';
+                document.body.appendChild(iframe);
+            }
+            iframe.src = blobUrl;
+            iframe.onload = () => {
+                setTimeout(() => {
+                    iframe.contentWindow.focus();
+                    iframe.contentWindow.print();
+                }, 200);
+            };
+        } catch (err) {
+            console.error('Failed to print PDF:', err);
+            setError('Failed to print PDF: ' + err.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handlePdfOnly = async () => {
-        if (window.windowControls && window.windowControls.printToPdf) {
-            const customerPrefix = selectedCustomer ? selectedCustomer.replace(/\s+/g, '_') + '_' : '';
-            const defaultFilename = `${customerPrefix}Statement_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.pdf`;
-            
-            try {
-                setLoading(true);
-                const result = await window.windowControls.printToPdf(defaultFilename);
-                if (!result.success && result.error !== 'Canceled') {
-                    setError('Failed to save PDF: ' + result.error);
-                }
-            } catch (err) {
-                setError('Failed to generate PDF: ' + err.message);
-            } finally {
-                setLoading(false);
-            }
-        } else {
-            window.print();
+        if (!statementData) return;
+        const customerPrefix = selectedCustomer ? selectedCustomer.replace(/\s+/g, '_') + '_' : '';
+        const defaultFilename = `${customerPrefix}Statement_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.pdf`;
+        
+        try {
+            setLoading(true);
+            const doc = await generateCustomerStatementPDF(
+                statementData,
+                {
+                    name: selectedCustomer,
+                    address: currentCustomerObj.address,
+                    phone: currentCustomerObj.phone,
+                    email: currentCustomerObj.email
+                },
+                companyInfo
+            );
+            doc.save(defaultFilename);
+        } catch (err) {
+            setError('Failed to generate PDF: ' + err.message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -233,7 +280,7 @@ export function CustomerStatement() {
                                 <img src={brickImage} alt="Brick" className="brick-logo" />
                             </div>
 
-                            <hr className="doc-divider mt-2 mb-2 w-full" style={{ border: 'none', borderTop: '3px solid #dc2626', margin: '0.2rem 0' }} />
+                            <hr className="doc-divider mt-2 mb-2 w-full" style={{ border: 'none', borderTop: '1px solid #000000', margin: '0.2rem 0' }} />
 
                             <div className="contact-info-grid">
                                 <div>
@@ -255,7 +302,7 @@ export function CustomerStatement() {
                             <h2 className="underline font-bold text-xl inline-block">Customer Statement</h2>
                             <div className="text-left mt-1 flex justify-between">
                                 <div>
-                                    <p><strong>Name :</strong> {selectedCustomer} Ji</p>
+                                    <p><strong>Name :</strong> {selectedCustomer ? (/^Mr\.?\s/i.test(selectedCustomer) ? selectedCustomer : `Mr. ${selectedCustomer}`) : ''} Ji</p>
                                     <p><strong>Address :</strong> {currentCustomerObj.address || ''}</p>
                                     <div className="flex">
                                         <strong className="mr-1">Contact No. :</strong>
@@ -315,22 +362,19 @@ export function CustomerStatement() {
                         {statementData.lines && statementData.lines.length > 0 && (
                             <div className="doc-footer mt-4 flex flex-col items-end">
                                 <div className="totals-grid grid grid-cols-2 gap-x-8 gap-y-2 w-full">
-                                    <div className="text-center flex items-center justify-center border font-bold h-full">
-                                        Total Bricks = {statementData.summary.totalBricks.toLocaleString()}
+                                    <div className="flex flex-col justify-between">
+                                        <div className="text-center flex items-center justify-center border font-bold p-3">
+                                            Total Bricks = {statementData.summary.totalBricks.toLocaleString()}
+                                        </div>
+                                        <div className="signatory mt-4 text-left">
+                                            <p className="font-bold">Authorized Signatory</p>
+                                            <p>{compName}</p>
+                                        </div>
                                     </div>
                                     <div className="totals-right border">
                                         <div className="flex justify-between p-1 border-b font-bold"><span className="mr-8 w-32 border-r text-right pr-2 block">Total Amount =</span> <span>₹ {statementData.summary.totalAmount.toLocaleString()}</span></div>
                                         <div className="flex justify-between p-1 border-b font-bold"><span className="mr-8 w-32 border-r text-right pr-2 block">Deposit =</span> <span>₹ {statementData.summary.deposit.toLocaleString()}</span></div>
                                         <div className="flex justify-between p-1 font-bold"><span className="mr-8 w-32 border-r text-right pr-2 block">Total Balance =</span> <span>₹ {statementData.summary.totalBalance.toLocaleString()}</span></div>
-                                    </div>
-                                </div>
-                                <div className="signatory w-full flex justify-between mt-8">
-                                    <div className="text-center ml-12">
-                                        <p>Authorized Signatory</p>
-                                        <p>{compName}</p>
-                                    </div>
-                                    <div className="mr-12 opacity-0">
-                                        <p>Placeholder</p>
                                     </div>
                                 </div>
                             </div>

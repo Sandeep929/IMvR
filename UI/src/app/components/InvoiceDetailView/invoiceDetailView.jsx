@@ -2,36 +2,55 @@ import React from 'react';
 import { Printer, Download, X } from 'lucide-react';
 import brickImage from '../../../assets/print-logo.png';
 import './invoiceDetailView.css';
-import logo from "../../../assets/jc-bricks.png";
+import logo from "../../../assets/jc-bricks.webp";
+import { generateInvoicePDF } from '../../../services/pdfGenerator';
 
 export function InvoiceDetailView({ invoice, customers = [], onClose }) {
     const customer = customers.find(c => c.name === invoice.customerName);
     const displayPhone = invoice.customerPhone || (customer ? (customer.phone || customer.mobile || '') : '');
 
-    const handlePrint = () => {
-        window.print();
-    };
+    const companyInfo = JSON.parse(localStorage.getItem('companySettings') || '{}');
 
-    const handleDownloadPDF = async () => {
-        if (window.windowControls && window.windowControls.printToPdf) {
-            const customerPrefix = invoice.customerName ? invoice.customerName.replace(/\s+/g, '_') + '_' : '';
-            const pavatiSuffix = invoice.pavatiNo ? `Inv_${invoice.pavatiNo}_` : '';
-            const defaultFilename = `${customerPrefix}${pavatiSuffix}${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.pdf`;
-            
-            try {
-                const result = await window.windowControls.printToPdf(defaultFilename);
-                if (!result.success && result.error !== 'Canceled') {
-                    alert('Failed to save PDF: ' + result.error);
-                }
-            } catch (err) {
-                alert('Failed to generate PDF: ' + err.message);
+    const handlePrint = async () => {
+        try {
+            const doc = await generateInvoicePDF(invoice, customers, companyInfo, { margin: 4 });
+            const blob = doc.output('blob');
+            const blobUrl = URL.createObjectURL(blob);
+            let iframe = document.getElementById('pdf-print-iframe');
+            if (!iframe) {
+                iframe = document.createElement('iframe');
+                iframe.id = 'pdf-print-iframe';
+                iframe.style.position = 'fixed';
+                iframe.style.width = '0px';
+                iframe.style.height = '0px';
+                iframe.style.border = 'none';
+                document.body.appendChild(iframe);
             }
-        } else {
-            window.print();
+            iframe.src = blobUrl;
+            iframe.onload = () => {
+                setTimeout(() => {
+                    iframe.contentWindow.focus();
+                    iframe.contentWindow.print();
+                }, 200);
+            };
+        } catch (err) {
+            console.error('Failed to print PDF:', err);
+            alert('Failed to print PDF: ' + err.message);
         }
     };
 
-    const companyInfo = JSON.parse(localStorage.getItem('companySettings') || '{}');
+    const handleDownloadPDF = async () => {
+        const customerPrefix = invoice.customerName ? invoice.customerName.replace(/\s+/g, '_') + '_' : '';
+        const pavatiSuffix = invoice.pavatiNo ? `Inv_${invoice.pavatiNo}_` : '';
+        const defaultFilename = `${customerPrefix}${pavatiSuffix}${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.pdf`;
+        
+        try {
+            const doc = await generateInvoicePDF(invoice, customers, companyInfo);
+            doc.save(defaultFilename);
+        } catch (err) {
+            alert('Failed to generate PDF: ' + err.message);
+        }
+    };
     const compName = companyInfo.name || 'JC Bricks Manufacturing';
     const compAddress = companyInfo.address || 'Village Bisnawda Dhar Road Indore-453001 (M.P.) India';
     const compPhone = companyInfo.phone || '9826305085, 9926777485';
@@ -94,7 +113,7 @@ export function InvoiceDetailView({ invoice, customers = [], onClose }) {
                             <img src={brickImage} alt="Brick" className="brick-logo" />
                         </div>
 
-                        <hr className="doc-divider mt-2 mb-2 w-full" style={{ border: 'none', borderTop: '3px solid #dc2626', margin: '0.2rem 0' }} />
+                        <hr className="doc-divider mt-2 mb-2 w-full" style={{ border: 'none', borderTop: '1px solid #000000', margin: '0.2rem 0' }} />
 
                         <div className="contact-info-grid">
                             <div>
@@ -149,8 +168,8 @@ export function InvoiceDetailView({ invoice, customers = [], onClose }) {
                                     <td>{index + 1}</td>
                                     <td>{item.product}</td>
                                     <td>{item.quantity}</td>
-                                    <td>₹ {Number(item.rate).toFixed(2)}</td>
-                                    <td>₹ {Number(Math.round((item.amount || 0) * 100) / 100).toLocaleString()}</td>
+                                    <td>Rs. {Number(item.rate).toFixed(2)}</td>
+                                    <td>Rs. {Number(Math.round((item.amount || 0) * 100) / 100).toLocaleString()}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -177,7 +196,7 @@ export function InvoiceDetailView({ invoice, customers = [], onClose }) {
                                             <td>{new Date(payment.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' })}</td>
                                             <td>{payment.method || 'Cash'}</td>
                                             <td>{payment.remarks || '-'}</td>
-                                            <td>₹ {Number(payment.amount).toLocaleString()}</td>
+                                            <td>Rs. {Number(payment.amount).toLocaleString()}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -189,8 +208,8 @@ export function InvoiceDetailView({ invoice, customers = [], onClose }) {
                     <div className="totals-section">
                         <div className="totals-left">
                             <p style={{ marginBottom: '0.5rem' }}><strong>Total Quantity = {items.reduce((s, i) => s + Number(i.quantity), 0)}</strong></p>
-                            <div className="signature-box">
-                                <p>Authorized Signatory</p>
+                            <div className="signature-box mt-4">
+                                <p><strong>Authorized Signatory</strong></p>
                                 <p>{compName}</p>
                             </div>
                         </div>
@@ -198,15 +217,15 @@ export function InvoiceDetailView({ invoice, customers = [], onClose }) {
                         <div className="totals-right">
                             <div className="total-row">
                                 <div className="total-label"><strong>Total Amount =</strong></div>
-                                <div className="total-value"><strong>₹ {Number(totalAmount).toLocaleString()}</strong></div>
+                                <div className="total-value"><strong>Rs. {Number(totalAmount).toLocaleString()}</strong></div>
                             </div>
                             <div className="total-row">
                                 <div className="total-label"><strong>Total Received =</strong></div>
-                                <div className="total-value"><strong>₹ {Number(totalAdvance).toLocaleString()}</strong></div>
+                                <div className="total-value"><strong>Rs. {Number(totalAdvance).toLocaleString()}</strong></div>
                             </div>
                             <div className="total-row">
                                 <div className="total-label"><strong>Balance Due =</strong></div>
-                                <div className="total-value"><strong>₹ {Number(balance).toLocaleString()}</strong></div>
+                                <div className="total-value"><strong>Rs. {Number(balance).toLocaleString()}</strong></div>
                             </div>
                         </div>
                     </div>

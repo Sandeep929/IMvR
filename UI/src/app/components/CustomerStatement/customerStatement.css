@@ -244,13 +244,13 @@
 /* Standard PDF Page Size */
 @page {
     size: A4;
-    margin: 10mm;
+    margin: 0;
 }
 
-/* Printing Rule */
+/* Printing Rules */
 @media print {
     /* 1. Hide Global App Layout Elements */
-    .sidebar-container, .header-container, aside, header, nav {
+    .sidebar-container, .header-container, aside, header, nav, .statement-controls, .preview-toolbar, .error-message {
         display: none !important;
     }
 

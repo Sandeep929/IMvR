@@ -44,7 +44,14 @@ export function Customers() {
         if (!Array.isArray(customers) || !Array.isArray(invoices)) return [];
         return customers.map(customer => {
             if (!customer) return null;
-            const customerInvoices = (invoices || []).filter(inv => inv?.customerName === customer?.name);
+            const customerInvoices = (invoices || []).filter(inv => {
+                const matchesUuid = inv?.customerUuid && (
+                    inv.customerUuid === customer.uuid ||
+                    inv.customerUuid === customer._id ||
+                    inv.customerUuid === customer.id
+                );
+                return matchesUuid || inv?.customerName === customer?.name;
+            });
             return {
                 ...customer,
                 totalInvoices: customerInvoices.length,

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Lock, User, AlertCircle, MapPin, Phone, Mail, ArrowLeft, CheckCircle2, KeyRound } from 'lucide-react';
 import { settingsAPI } from '../../../services/api';
 import './login.css';
-import logo from "../../../assets/jc-bricks.png";
+import logo from "../../../assets/jc-bricks.webp";
 export function Login({ onLogin }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');

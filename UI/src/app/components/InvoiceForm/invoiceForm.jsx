@@ -4,7 +4,7 @@ import { shareInvoiceOnWhatsApp } from '../../../utils/whatsapp';
 import { SearchableDropdown } from '../ui/SearchableDropdown';
 import './invoiceForm.css';
 
-const PREDEFINED_VEHICLES = ['MP 09 KA 1969', 'MP 09 ha 1284', 'MP 09 GF 6529'];
+const PREDEFINED_VEHICLES = ['MP 09 KA 1969', 'MP 41 HA 1284', 'MP 09 GF 6529'];
 
 export function InvoiceForm({ invoice, onSave, onCancel }) {
     const [customers, setCustomers] = useState([]);
@@ -57,6 +57,7 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
         orderNo: '',
         customerName: '',
         customerPhone: '',
+        customerUuid: '',
         site: '',
         vehicleNo: '',
         marfat: '',
@@ -79,6 +80,7 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                 ...invoice,
                 date: invoice.date ? new Date(invoice.date).toISOString().split('T')[0] : '',
                 customerPhone: invoice.customerPhone || '',
+                customerUuid: invoice.customerUuid || '',
                 items: (invoice.items || [{ product: '', quantity: 0, rate: 0, amount: 0 }]).map(item => ({
                     ...item,
                     amount: Math.round((item.amount || 0) * 100) / 100
@@ -231,7 +233,8 @@ export function InvoiceForm({ invoice, onSave, onCancel }) {
                                             setFormData(prev => ({
                                                 ...prev,
                                                 customerName: val,
-                                                customerPhone: selectedCustomer ? (selectedCustomer.phone || selectedCustomer.mobile || '') : prev.customerPhone
+                                                customerPhone: selectedCustomer ? (selectedCustomer.phone || selectedCustomer.mobile || '') : prev.customerPhone,
+                                                customerUuid: selectedCustomer ? (selectedCustomer.uuid || selectedCustomer._id || selectedCustomer.id) : ''
                                             }));
                                         }}
                                         placeholder="Select Customer..."

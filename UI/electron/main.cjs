@@ -79,9 +79,9 @@ ipcMain.on("window-maximize", () => {
 ipcMain.handle("print-to-pdf", async (event, defaultFilename) => {
   const win = BrowserWindow.fromWebContents(event.sender);
   const { canceled, filePath } = await dialog.showSaveDialog(win, {
-    title: "Save Statement",
+    title: "Save Document",
     filters: [{ name: "PDF Documents", extensions: ["pdf"] }],
-    defaultPath: defaultFilename || "Statement.pdf",
+    defaultPath: defaultFilename || "Document.pdf",
   });
 
   if (canceled) return { success: false, error: "Canceled" };

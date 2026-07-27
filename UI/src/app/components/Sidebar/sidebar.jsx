@@ -1,7 +1,7 @@
 import React from 'react';
 import { LayoutDashboard, FileText, Users, Package, BarChart3, Settings, FlaskConical, X, Menu } from 'lucide-react';
 import './sidebar.css';
-import logo from "../../../assets/jc-bricks.png";
+import logo from "../../../assets/jc-bricks.webp";
 import packageJson from '../../../../package.json';
 
 export function Sidebar({ activeTab, setActiveTab, isOpen, onClose, isCollapsed, onToggleCollapse }) {
