@@ -2,6 +2,11 @@ appId: com.jcbricks.manufacturing
 productName: JC Bricks
 copyright: Copyright © 2025 JC Bricks Manufacturing
 
+publish:
+  provider: github
+  owner: Sandeep929
+  repo: IMvR
+
 # Where the installer output goes (one level up from UI/)
 directories:
   output: ../dist-installer
