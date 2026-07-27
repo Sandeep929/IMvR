@@ -1,6 +1,7 @@
 const { app, ipcMain, BrowserWindow, dialog } = require("electron");
 const path = require("path");
 const fs = require("fs");
+const { autoUpdater } = require("electron-updater");
 
 let serverStarted = false;
 
@@ -101,3 +102,27 @@ ipcMain.handle("print-to-pdf", async (event, defaultFilename) => {
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
 });
+
+// Auto-updater configuration
+if (app.isPackaged) {
+  app.on("ready", () => {
+    autoUpdater.checkForUpdatesAndNotify();
+  });
+
+  autoUpdater.on("update-downloaded", () => {
+    dialog.showMessageBox({
+      type: "info",
+      title: "Update Ready",
+      message: "A new version of JC Bricks is ready to install. Restart the application now?",
+      buttons: ["Yes", "Later"]
+    }).then((result) => {
+      if (result.response === 0) {
+        autoUpdater.quitAndInstall();
+      }
+    });
+  });
+
+  autoUpdater.on("error", (err) => {
+    console.error("Error in auto-updater:", err);
+  });
+}
