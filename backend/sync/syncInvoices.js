@@ -25,6 +25,7 @@ export const syncInvoices = async () => {
         { uuid: inv.uuid },
         {
           uuid: inv.uuid,
+          customerUuid: inv.customerUuid || null,
           pavatiNo: inv.pavatiNo || '',
           orderNo: inv.orderNo || '',
           date: inv.date || new Date().toISOString(),
@@ -79,11 +80,12 @@ export const syncInvoices = async () => {
     if (updatedInCloud.length > 0) {
       const insertOrUpdateInvoice = db.prepare(`
         INSERT INTO invoices (
-          uuid, pavatiNo, orderNo, date, customerName, customerPhone, site, vehicleNo,
+          uuid, customerUuid, pavatiNo, orderNo, date, customerName, customerPhone, site, vehicleNo,
           totalAmount, totalAdvance, balance, marfat, remarks, createdAt, updatedAt, isDeleted, synced
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
         ON CONFLICT(uuid) DO UPDATE SET
+          customerUuid = excluded.customerUuid,
           pavatiNo = excluded.pavatiNo,
           orderNo = excluded.orderNo,
           date = excluded.date,
@@ -121,6 +123,7 @@ export const syncInvoices = async () => {
           // 1. Insert/Update main invoice record
           insertOrUpdateInvoice.run(
             inv.uuid,
+            inv.customerUuid || null,
             inv.pavatiNo || '',
             inv.orderNo || '', 
             safeDateISO(inv.date), 

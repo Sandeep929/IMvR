@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 /* Recreate __dirname for ES Modules — also works when bundled to CJS by esbuild */
@@ -13,6 +14,17 @@ const __dirname_compat = typeof __dirname !== 'undefined'
 const dbPath = process.env.USER_DATA_PATH
   ? path.join(process.env.USER_DATA_PATH, 'local.db')
   : path.join(__dirname_compat, 'local.db');
+
+/* Create an automatic physical backup of the SQLite database on startup */
+try {
+  if (fs.existsSync(dbPath)) {
+    const backupPath = dbPath + '.backup';
+    fs.copyFileSync(dbPath, backupPath);
+    console.log(`[Backup] SQLite database successfully backed up to: ${backupPath}`);
+  }
+} catch (err) {
+  console.error('[Backup] Failed to auto-backup SQLite database:', err);
+}
 
 /* Open SQLite database */
 const db = new Database(dbPath);
@@ -50,6 +62,7 @@ CREATE TABLE IF NOT EXISTS products (
 
 CREATE TABLE IF NOT EXISTS invoices (
   uuid TEXT PRIMARY KEY,
+  customerUuid TEXT,
   pavatiNo TEXT NOT NULL,
   orderNo TEXT,
   date TEXT NOT NULL,
@@ -202,11 +215,11 @@ try {
         synced INTEGER DEFAULT 0
       );
       INSERT INTO invoices_new (
-        uuid, pavatiNo, orderNo, date, customerName, customerPhone, site, vehicleNo,
+        uuid, customerUuid, pavatiNo, orderNo, date, customerName, customerPhone, site, vehicleNo,
         totalAmount, totalAdvance, balance, marfat, remarks, createdAt, updatedAt, isDeleted, synced
       )
       SELECT
-        uuid, pavatiNo, orderNo, date, customerName, customerPhone, site, vehicleNo,
+        uuid, NULL, pavatiNo, orderNo, date, customerName, customerPhone, site, vehicleNo,
         totalAmount, totalAdvance, balance, marfat, remarks, createdAt, updatedAt, isDeleted, synced
       FROM invoices;
       DROP TABLE invoices;
@@ -215,6 +228,86 @@ try {
   }
 } catch (err) {
   console.error("Failed to migrate invoices table:", err);
+}
+
+/* Specific migration for customerUuid in invoices */
+try {
+  db.exec(`ALTER TABLE invoices ADD COLUMN customerUuid TEXT`);
+} catch (err) {
+  // Ignore if column already exists
+}
+
+/* Self-healing migration: Link invoices to customers using name or phone number matching */
+try {
+  const unlinkedCount = db.prepare("SELECT COUNT(*) as cnt FROM invoices WHERE customerUuid IS NULL").get();
+  if (unlinkedCount && unlinkedCount.cnt > 0) {
+    console.log(`[Migration] Found ${unlinkedCount.cnt} unlinked invoices. Attempting to match with customers...`);
+    const customers = db.prepare('SELECT uuid, name, phone FROM customers').all();
+    const updateStmt = db.prepare('UPDATE invoices SET customerUuid = ?, synced = 0 WHERE uuid = ?');
+    
+    db.transaction(() => {
+      const unlinked = db.prepare('SELECT uuid, customerName, customerPhone FROM invoices WHERE customerUuid IS NULL').all();
+      let linkedCount = 0;
+      for (const inv of unlinked) {
+        // 1. Match by exact name
+        let matched = customers.find(c => c.name.trim().toLowerCase() === inv.customerName.trim().toLowerCase());
+        
+        // 2. Match by phone number if name didn't match (for edited names)
+        if (!matched && inv.customerPhone) {
+          const invPhones = inv.customerPhone.split(/[,/]/).map(p => p.trim()).filter(Boolean);
+          for (const phone of invPhones) {
+            matched = customers.find(c => {
+              if (!c.phone) return false;
+              const cPhones = c.phone.split(/[,/]/).map(p => p.trim()).filter(Boolean);
+              return cPhones.some(cp => cp === phone || cp.includes(phone) || phone.includes(cp));
+            });
+            if (matched) break;
+          }
+        }
+
+        if (matched) {
+          updateStmt.run(matched.uuid, inv.uuid);
+          linkedCount++;
+        }
+      }
+      console.log(`[Migration] Successfully linked ${linkedCount} out of ${unlinked.length} invoices to customer records.`);
+    })();
+  }
+} catch (err) {
+  console.error('[Migration] Error running invoice customerUuid linking migration:', err);
+}
+
+/* Migration: Update vehicle number from MP 09 HA 1284 / MP 09 ha 1284 to MP 41 HA 1284 */
+try {
+  const targetOldVehicles = ['MP 09 ha 1284', 'MP 09 HA 1284'];
+  const updateVehicleStmt = db.prepare(`
+    UPDATE invoices
+    SET vehicleNo = 'MP 41 HA 1284',
+        synced = 0,
+        updatedAt = ?
+    WHERE vehicleNo = ?
+  `);
+
+  const selectVehicleStmt = db.prepare(`
+    SELECT uuid FROM invoices WHERE vehicleNo = ?
+  `);
+
+  db.transaction(() => {
+    let updatedCount = 0;
+    const now = new Date().toISOString();
+    for (const oldVeh of targetOldVehicles) {
+      const records = selectVehicleStmt.all(oldVeh);
+      if (records.length > 0) {
+        const info = updateVehicleStmt.run(now, oldVeh);
+        updatedCount += info.changes;
+      }
+    }
+    if (updatedCount > 0) {
+      console.log(`[Migration] Updated ${updatedCount} invoice records: vehicle number changed from MP 09 HA 1284 to MP 41 HA 1284.`);
+    }
+  })();
+} catch (err) {
+  console.error('[Migration] Failed to update vehicle numbers in database:', err);
 }
 
 /* Export DB */

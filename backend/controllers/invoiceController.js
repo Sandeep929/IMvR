@@ -91,7 +91,7 @@ export const createInvoice = (req, res) => {
   const {
     pavatiNo, orderNo, date, customerName, customerPhone, site,
     vehicleNo, items, payments, totalAmount,
-    totalAdvance, balance, marfat, remarks
+    totalAdvance, balance, marfat, remarks, customerUuid
   } = req.body;
 
   const uuid = uuidv4();
@@ -99,11 +99,11 @@ export const createInvoice = (req, res) => {
   try {
     const insertInvoice = db.prepare(`
       INSERT INTO invoices (
-        uuid, pavatiNo, orderNo, date, customerName, customerPhone, site,
+        uuid, customerUuid, pavatiNo, orderNo, date, customerName, customerPhone, site,
         vehicleNo, totalAmount, totalAdvance, balance, 
         marfat, remarks, createdAt, updatedAt, isDeleted, synced
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
     `);
 
     const insertItem = db.prepare(`
@@ -119,7 +119,7 @@ export const createInvoice = (req, res) => {
     // Use a transaction for atomicity
     const transaction = db.transaction(() => {
       insertInvoice.run(
-        uuid, pavatiNo, orderNo, date, customerName, customerPhone, site,
+        uuid, customerUuid || null, pavatiNo, orderNo, date, customerName, customerPhone, site,
         vehicleNo, totalAmount, totalAdvance, balance,
         marfat, remarks, new Date().toISOString(), new Date().toISOString()
       );
@@ -158,7 +158,7 @@ export const updateInvoice = (req, res) => {
   const {
     pavatiNo, orderNo, date, customerName, customerPhone, site,
     vehicleNo, items, payments, totalAmount,
-    totalAdvance, balance, marfat, remarks
+    totalAdvance, balance, marfat, remarks, customerUuid
   } = req.body;
 
   try {
@@ -170,7 +170,7 @@ export const updateInvoice = (req, res) => {
 
     const updateInvoiceStmt = db.prepare(`
       UPDATE invoices SET
-        pavatiNo = ?, orderNo = ?, date = ?, customerName = ?, customerPhone = ?,
+        customerUuid = ?, pavatiNo = ?, orderNo = ?, date = ?, customerName = ?, customerPhone = ?,
         site = ?, vehicleNo = ?, totalAmount = ?,
         totalAdvance = ?, balance = ?, marfat = ?,
         remarks = ?, updatedAt = ?, synced = 0
@@ -191,7 +191,7 @@ export const updateInvoice = (req, res) => {
 
     const transaction = db.transaction(() => {
       updateInvoiceStmt.run(
-        pavatiNo, orderNo, date, customerName, customerPhone, site,
+        customerUuid || null, pavatiNo, orderNo, date, customerName, customerPhone, site,
         vehicleNo, totalAmount, totalAdvance, balance,
         marfat, remarks, new Date().toISOString(), req.params.id
       );

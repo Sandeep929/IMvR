@@ -7,6 +7,7 @@ const invoiceSchema = new mongoose.Schema({
         default: uuidv4,
         unique: true
     },
+    customerUuid: { type: String },
     pavatiNo: { type: String, required: true },
     orderNo: { type: String },
     date: { type: Date, required: true },

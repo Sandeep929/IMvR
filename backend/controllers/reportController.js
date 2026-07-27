@@ -222,10 +222,10 @@ export const getReportData = (req, res) => {
 =============================== */
 export const getCustomerStatement = (req, res) => {
   try {
-    const { customerName, startDate, endDate } = req.query;
+    const { customerName, customerUuid, startDate, endDate } = req.query;
 
-    if (!customerName) {
-      return res.status(400).json({ message: 'customerName is required' });
+    if (!customerName && !customerUuid) {
+      return res.status(400).json({ message: 'customerName or customerUuid is required' });
     }
 
     let qEndDate = endDate;
@@ -233,8 +233,16 @@ export const getCustomerStatement = (req, res) => {
       qEndDate += 'T23:59:59.999Z';
     }
 
-    let query = `SELECT * FROM invoices WHERE customerName = ? AND isDeleted = 0`;
-    const params = [customerName];
+    let query;
+    let params = [];
+
+    if (customerUuid) {
+      query = `SELECT * FROM invoices WHERE customerUuid = ? AND isDeleted = 0`;
+      params.push(customerUuid);
+    } else {
+      query = `SELECT * FROM invoices WHERE customerName = ? AND isDeleted = 0`;
+      params.push(customerName);
+    }
 
     if (startDate && endDate) {
       query += ` AND date BETWEEN ? AND ?`;
@@ -252,8 +260,13 @@ export const getCustomerStatement = (req, res) => {
     const invoices = db.prepare(query).all(...params);
 
     if (invoices.length === 0) {
+      let displayName = customerName || '';
+      if (!displayName && customerUuid) {
+        const customer = db.prepare('SELECT name FROM customers WHERE uuid = ?').get(customerUuid);
+        if (customer) displayName = customer.name;
+      }
       return res.json({ 
-        customerName, 
+        customerName: displayName, 
         lines: [], 
         summary: { totalBricks: 0, totalAmount: 0, deposit: 0, totalBalance: 0 } 
       });

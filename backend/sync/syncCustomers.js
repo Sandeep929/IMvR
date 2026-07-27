@@ -1,5 +1,6 @@
 import db from '../config/sqliteDb.js';
 import Customer from '../models/Customer.js';
+import Invoice from '../models/Invoice.js';
 
 const safeDateISO = (d) => {
   if (!d) return new Date().toISOString();
@@ -30,6 +31,12 @@ export const syncCustomers = async () => {
           isDeleted: c.isDeleted === 1
         },
         { upsert: true }
+      );
+      
+      // Cascade update matching invoices in MongoDB
+      await Invoice.updateMany(
+        { customerUuid: c.uuid },
+        { $set: { customerName: c.name || '', customerPhone: c.phone || '' } }
       );
 
       db.prepare(`
@@ -78,6 +85,12 @@ export const syncCustomers = async () => {
           synced = 1
       `);
 
+      const updateInvoices = db.prepare(`
+        UPDATE invoices SET
+          customerName = ?, customerPhone = ?, synced = 0
+        WHERE customerUuid = ?
+      `);
+
       const transaction = db.transaction((customers) => {
         for (const c of customers) {
           if (!c.uuid) continue;
@@ -92,6 +105,7 @@ export const syncCustomers = async () => {
             safeDateISO(c.updatedAt),
             c.isDeleted ? 1 : 0
           );
+          updateInvoices.run(c.name || '', c.phone || '', c.uuid);
         }
       });
       

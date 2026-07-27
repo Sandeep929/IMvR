@@ -95,20 +95,34 @@ export const updateCustomer = (req, res) => {
       return res.status(404).json({ message: 'Customer not found' });
     }
 
-    db.prepare(`
-      UPDATE customers SET
-        name = ?, phone = ?, whatsappNumber = ?, email = ?, address = ?,
-        updatedAt = ?, synced = 0
-      WHERE uuid = ?
-    `).run(
-      req.body.name,
-      req.body.phone,
-      req.body.whatsappNumber || null,
-      req.body.email,
-      req.body.address,
-      new Date().toISOString(),
-      req.params.id
-    );
+    const transaction = db.transaction(() => {
+      db.prepare(`
+        UPDATE customers SET
+          name = ?, phone = ?, whatsappNumber = ?, email = ?, address = ?,
+          updatedAt = ?, synced = 0
+        WHERE uuid = ?
+      `).run(
+        req.body.name,
+        req.body.phone,
+        req.body.whatsappNumber || null,
+        req.body.email,
+        req.body.address,
+        new Date().toISOString(),
+        req.params.id
+      );
+
+      db.prepare(`
+        UPDATE invoices SET
+          customerName = ?, customerPhone = ?, synced = 0
+        WHERE customerUuid = ?
+      `).run(
+        req.body.name,
+        req.body.phone,
+        req.params.id
+      );
+    });
+
+    transaction();
 
     const updated = db.prepare(`
       SELECT * FROM customers WHERE uuid = ?
